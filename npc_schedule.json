@@ -1,0 +1,1163 @@
+{
+  "ashura": {
+    "name": "Ashura",
+    "emoji": "<:Ashura:1489971131049050202>",
+    "schedule": [
+      {
+        "from": "08:00",
+        "to": "10:00",
+        "location_short": "Allenamento",
+        "location_full": "Cammina dalla sua stanza fino alla stanza aperta sopra la Taverna per allenarsi."
+      },
+      {
+        "from": "10:00",
+        "to": "14:00",
+        "location_short": "Pesca",
+        "location_full": "Lascia la Taverna e cammina alla postazione di pesca a nord‑ovest del villaggio vicino alla fattoria della famiglia Daiya."
+      },
+      {
+        "from": "14:00",
+        "to": "17:00",
+        "location_short": "Giardino dei Ricordi",
+        "location_full": "Cammina fino al Giardino dei Ricordi e resta davanti alla lapide di Sabine."
+      },
+      {
+        "from": "17:00",
+        "to": "05:00",
+        "location_short": "Taverna",
+        "location_full": "Lascia il Giardino dei Ricordi e cammina fino alla Taverna."
+      },
+      {
+        "from": "05:00",
+        "to": "08:00",
+        "location_short": "Dorme",
+        "location_full": "Sale nella sua stanza per dormire."
+      }
+    ]
+  },
+  "auni": {
+    "name": "Auni",
+    "emoji": "<:Auni:1489971104243126453>",
+    "schedule": [
+      {
+        "from": "04:00",
+        "to": "10:00",
+        "location_short": "Piazza",
+        "location_full": "Si sveglia e cammina verso la piazza cittadina."
+      },
+      {
+        "from": "10:00",
+        "to": "14:00",
+        "location_short": "Mulino",
+        "location_full": "Passeggia verso est della città fino a un mulino a vento."
+      },
+      {
+        "from": "14:00",
+        "to": "15:00",
+        "location_short": "Taverna",
+        "location_full": "Si dirige verso la Taverna."
+      },
+      {
+        "from": "15:00",
+        "to": "18:00",
+        "location_short": "Portico",
+        "location_full": "Si ferma sotto il portico posteriore della Taverna."
+      },
+      {
+        "from": "18:00",
+        "to": "21:00",
+        "location_short": "Cucina",
+        "location_full": "Cammina verso la cucina della fattoria."
+      },
+      {
+        "from": "21:00",
+        "to": "00:00",
+        "location_short": "Casa sull’albero",
+        "location_full": "Si dirige alla sua casa sull'albero e si ferma lì accanto."
+      },
+      {
+        "from": "00:00",
+        "to": "04:00",
+        "location_short": "Dorme",
+        "location_full": "Va a dormire."
+      }
+    ]
+  },
+  "badruu": {
+    "name": "Badruu",
+    "emoji": "<:Badruu:1489971078792089601>",
+    "schedule": [
+      {
+        "from": "04:00",
+        "to": "09:00",
+        "location_short": "Fattoria",
+        "location_full": "Si sveglia ed esce nella fattoria."
+      },
+      {
+        "from": "09:00",
+        "to": "13:00",
+        "location_short": "Negozio",
+        "location_full": "Si dirige verso il negozio della fattoria."
+      },
+      {
+        "from": "13:00",
+        "to": "17:00",
+        "location_short": "Taverna",
+        "location_full": "Si dirige verso la Taverna."
+      },
+      {
+        "from": "17:00",
+        "to": "21:00",
+        "location_short": "Cucina",
+        "location_full": "Torna alla cucina della fattoria."
+      },
+      {
+        "from": "21:00",
+        "to": "22:00",
+        "location_short": "Fienile",
+        "location_full": "Entra nel fienile."
+      },
+      {
+        "from": "22:00",
+        "to": "04:00",
+        "location_short": "Dorme",
+        "location_full": "Cammina verso la sua stanza e va a dormire. (per poco, si sveglia all'1 di mattina)"
+      }
+    ]
+  },
+  "caleri": {
+    "name": "Caleri",
+    "emoji": "<:Caleri:1489971035506737203>",
+    "schedule": [
+      {
+        "from": "04:00",
+        "to": "10:00",
+        "location_short": "Biblioteca",
+        "location_full": "Si sveglia e cammina verso la Biblioteca."
+      },
+      {
+        "from": "10:00",
+        "to": "14:00",
+        "location_short": "Piazza",
+        "location_full": "Cammina verso la piazza del villaggio di Kilima."
+      },
+      {
+        "from": "14:00",
+        "to": "17:00",
+        "location_short": "Fattoria Daiya",
+        "location_full": "Si dirige verso la fattoria della famiglia Daiya."
+      },
+      {
+        "from": "17:00",
+        "to": "21:00",
+        "location_short": "Locanda",
+        "location_full": "Cammina verso la Locanda."
+      },
+      {
+        "from": "21:00",
+        "to": "22:00",
+        "location_short": "Casa",
+        "location_full": "Torna a casa."
+      },
+      {
+        "from": "22:00",
+        "to": "04:00",
+        "location_short": "Dorme",
+        "location_full": "Va a dormire."
+      }
+    ]
+  },
+  "chayne": {
+    "name": "Chayne",
+    "emoji": "<:Chayne:1489971007652626572>",
+    "schedule": [
+      {
+        "from": "03:00",
+        "to": "08:00",
+        "location_short": "Santuario",
+        "location_full": "Si sveglia e cammina verso il Santuario del Drago."
+      },
+      {
+        "from": "08:00",
+        "to": "17:00",
+        "location_short": "Erboristeria",
+        "location_full": "Cammina verso l'Erboristeria."
+      },
+      {
+        "from": "17:00",
+        "to": "21:00",
+        "location_short": "Taverna",
+        "location_full": "Si dirige verso il centro della Taverna."
+      },
+      {
+        "from": "21:00",
+        "to": "03:00",
+        "location_short": "Dorme",
+        "location_full": "Torna a casa e va a dormire."
+      }
+    ]
+  },
+  "delaila": {
+    "name": "Delaila",
+    "emoji": "<:Delaila:1489970956507025438>",
+    "schedule": [
+      {
+        "from": "04:00",
+        "to": "12:00",
+        "location_short": "Recinto Ormuu",
+        "location_full": "Si sveglia e cammina verso il fieno vicino al recinto degli Ormuu nella fattoria."
+      },
+      {
+        "from": "12:00",
+        "to": "13:50",
+        "location_short": "Da Ormuu a Emporio",
+        "location_full": "Cammina dal recinto degli Ormuu verso l'Emporio."
+      },
+      {
+        "from": "13:50",
+        "to": "17:00",
+        "location_short": "Emporio",
+        "location_full": "Raggiunge l'Emporio."
+      },
+      {
+        "from": "17:00",
+        "to": "18:45",
+        "location_short": "Da Emporio a casa",
+        "location_full": "Cammina dall'Emporio verso casa."
+      },
+      {
+        "from": "18:45",
+        "to": "21:00",
+        "location_short": "Cucina Daiya",
+        "location_full": "Raggiunge la cucina della famiglia Daiya."
+      },
+      {
+        "from": "21:00",
+        "to": "22:40",
+        "location_short": "Da casa a Taverna",
+        "location_full": "Cammina da casa verso la Taverna."
+      },
+      {
+        "from": "22:40",
+        "to": "01:00",
+        "location_short": "Taverna",
+        "location_full": "Raggiunge la Taverna."
+      },
+      {
+        "from": "01:00",
+        "to": "02:35",
+        "location_short": "Lascia Taverna",
+        "location_full": "Lascia la Taverna."
+      },
+      {
+        "from": "02:35",
+        "to": "04:00",
+        "location_short": "Casa",
+        "location_full": "Raggiunge casa."
+      }
+    ]
+  },
+  "einar": {
+    "name": "Einar",
+    "emoji": "<:Einar:1489970912500650125>",
+    "schedule": [
+      {
+        "from": "03:00",
+        "to": "00:00",
+        "location_short": "Laguna",
+        "location_full": "Cammina verso la Laguna del Pescatore per pescare tutto il giorno."
+      },
+      {
+        "from": "00:00",
+        "to": "00:45",
+        "location_short": "Verso casa",
+        "location_full": "Cammina verso casa."
+      },
+      {
+        "from": "00:45",
+        "to": "03:00",
+        "location_short": "Dorme",
+        "location_full": "Va a dormire."
+      }
+    ]
+  },
+  "elouisa": {
+    "name": "Elouisa",
+    "emoji": "<:Elouisa:1489970853641982134>",
+    "schedule": [
+      {
+        "from": "04:00",
+        "to": "10:00",
+        "location_short": "Punto pesca",
+        "location_full": "Si sveglia e cammina verso il punto di pesca a nord‑ovest di Kilima."
+      },
+      {
+        "from": "10:00",
+        "to": "12:00",
+        "location_short": "Scuderie",
+        "location_full": "Cammina verso la bacheca del viaggio rapido alle Scuderie Centrali."
+      },
+      {
+        "from": "12:00",
+        "to": "20:00",
+        "location_short": "Sambuco",
+        "location_full": "Si ferma vicino al Negozio di Artefatti nel Bosco di Sambuco."
+      },
+      {
+        "from": "20:00",
+        "to": "00:00",
+        "location_short": "Verso Biblioteca",
+        "location_full": "Lascia il Bosco di Sambuco e torna alla Biblioteca."
+      },
+      {
+        "from": "00:00",
+        "to": "04:00",
+        "location_short": "Verso casa",
+        "location_full": "Cammina dalla Biblioteca verso casa."
+      }
+    ]
+  },
+  "eshe": {
+    "name": "Eshe",
+    "emoji": "<:Eshe:1489970813967798394>",
+    "schedule": [
+      {
+        "from": "04:00",
+        "to": "07:00",
+        "location_short": "Casa Elouisa/Caleri",
+        "location_full": "Cammina dalla sua stanza nella Tenuta del Sindaco fino alla casa di Elouisa e Caleri e si ferma all’esterno."
+      },
+      {
+        "from": "07:00",
+        "to": "11:00",
+        "location_short": "Municipio",
+        "location_full": "Cammina verso il suo ufficio nel Municipio."
+      },
+      {
+        "from": "11:00",
+        "to": "13:00",
+        "location_short": "Balcone",
+        "location_full": "Esce sul balcone del Municipio."
+      },
+      {
+        "from": "13:00",
+        "to": "17:00",
+        "location_short": "Ponte",
+        "location_full": "Lascia il Municipio e si ferma oltre il ponte, tra la Taverna e la Sartoria."
+      },
+      {
+  "from": "17:00",
+  "to": "21:00",
+  "location_short": "Vicino Erboristeria",
+  "location_full": "Cammina verso la zona vicino all’Erboristeria, tra la casa di Elouisa e Caleri e l’arco che conduce ai Campi della Riflessione."
+      },
+      {
+        "from": "21:00",
+        "to": "00:00",
+        "location_short": "Balcone",
+        "location_full": "Torna al balcone del Municipio."
+      },
+      {
+        "from": "00:00",
+        "to": "04:00",
+        "location_short": "Tenuta Sindaco",
+        "location_full": "Cammina dal Municipio alla Tenuta del Sindaco per andare a dormire."
+      }
+    ]
+  },
+  "giardiniere": {
+    "name": "Giardiniere",
+    "emoji": "<:Gardener:1489970757500014762>",
+    "schedule": [],
+    "notes": [
+      "Il Giardiniere è un NPC statico: si trova nel Tempio delle Radici e non segue una routine giornaliera.",
+      "Dal livello 3 di amicizia può essere invitato nel proprio lotto."
+    ]
+  },
+  "hassian": {
+    "name": "Hassian",
+    "emoji": "<:Hassian:1489970656996229205>",
+    "schedule": [
+      {
+        "from": "04:00",
+        "to": "08:00",
+        "location_short": "Promontori Celati",
+        "location_full": "Cammina dal Boschetto di Hassian allo stagno di Promontori Celati."
+      },
+      {
+        "from": "08:00",
+        "to": "08:01",
+        "location_short": "Verso bacheca",
+        "location_full": "Lascia lo stagno e usa la bacheca del viaggio rapido."
+      },
+      {
+        "from": "08:01",
+        "to": "14:00",
+        "location_short": "Passaggio dei Chapaa",
+        "location_full": "Arriva nella Valle di Kilima e cammina verso i campi di Passaggio dei Chapaa, tra i mulini a vento."
+      },
+      {
+        "from": "14:00",
+        "to": "14:01",
+        "location_short": "Verso Bahari",
+        "location_full": "Cammina verso Bahari."
+      },
+      {
+        "from": "14:01",
+        "to": "20:00",
+        "location_short": "Scuderie",
+        "location_full": "Arriva alla bacheca del viaggio rapido delle Scuderie Centrali e si ferma vicino allo stagno a sud della grotta delle Scuderie."
+      },
+      {
+        "from": "20:00",
+        "to": "20:01",
+        "location_short": "Verso Scuderie",
+        "location_full": "Cammina verso la bacheca delle Scuderie Centrali."
+      },
+      {
+        "from": "20:01",
+        "to": "00:00",
+        "location_short": "Collina",
+        "location_full": "Arriva alla bacheca di Promontori Celati e cammina per fare la guardia sulla collina oltre Promontori Celati."
+      },
+      {
+        "from": "00:00",
+        "to": "04:00",
+        "location_short": "Boschetto",
+        "location_full": "Cammina verso il Boschetto di Hassian per andare a dormire."
+      }
+    ]
+  },
+  "hekla": {
+    "name": "Hekla",
+    "emoji": "<:Hekla:1489970556026622082>",
+    "schedule": [
+      {
+        "from": "03:00 AM",
+        "to": "12:00 PM",
+        "location_short": "Rovine",
+        "location_full": "Si sveglia e osserva le rovine vicino alla rovina chiusa di Jina."
+      },
+      {
+        "from": "12:00 PM",
+        "to": "03:00 PM",
+        "location_short": "Tempio",
+        "location_full": "Cammina verso il Tempio del Cielo Notturno."
+      },
+      {
+        "from": "03:00 PM",
+        "to": "11:00 PM",
+        "location_short": "Biblioteca",
+        "location_full": "Cammina verso la Biblioteca e rimane nei pressi dell’ingresso."
+      },
+      {
+        "from": "11:00 PM",
+        "to": "03:00 AM",
+        "location_short": "Tenda",
+        "location_full": "Ritorna alla sua tenda per dormire."
+      }
+    ]
+  },
+  "hodari": {
+    "name": "Hodari",
+    "emoji": "<:Hodari:1489970356281278646>",
+    "schedule": [
+      {
+        "from": "04:00 AM",
+        "to": "05:00 AM",
+        "location_short": "Cucina",
+        "location_full": "Va nella cucina della casa di Hodari e Najuma."
+      },
+      {
+        "from": "05:00 AM",
+        "to": "10:00 AM",
+        "location_short": "Officina",
+        "location_full": "Cammina verso l'officina a nord‑est della casa."
+      },
+      {
+        "from": "10:00 AM",
+        "to": "10:01 AM",
+        "location_short": "Verso Kilima",
+        "location_full": "Si dirige verso la Valle di Kilima."
+      },
+      {
+        "from": "10:01 AM",
+        "to": "02:00 PM",
+        "location_short": "Taverna",
+        "location_full": "Arriva nella Valle di Kilima e si dirige verso la Taverna."
+      },
+      {
+        "from": "02:00 PM",
+        "to": "02:01 PM",
+        "location_short": "Verso Bahari",
+        "location_full": "Lascia Kilima e torna verso Bahari."
+      },
+      {
+        "from": "02:01 PM",
+        "to": "08:00 PM",
+        "location_short": "Miniere",
+        "location_full": "Arriva a Bahari e cammina verso le miniere a sud‑est delle miniere Pavel."
+      },
+      {
+        "from": "08:00 PM",
+        "to": "09:00 PM",
+        "location_short": "Casa",
+        "location_full": "Ritorna nell'area esterna vicino alla casa."
+      },
+      {
+        "from": "09:00 PM",
+        "to": "10:00 PM",
+        "location_short": "Rovine",
+        "location_full": "Passa vicino alle Rovine di Bahari."
+      },
+      {
+        "from": "10:00 PM",
+        "to": "11:00 PM",
+        "location_short": "Casa",
+        "location_full": "Ritorna nell'area esterna vicino alla casa."
+      },
+      {
+        "from": "11:00 PM",
+        "to": "04:00 AM",
+        "location_short": "Dorme",
+        "location_full": "Rientra in casa per andare a dormire."
+      }
+    ]
+  },
+  "jel": {
+    "name": "Jel",
+    "emoji": "<:Jel:1489970235787317380>",
+    "schedule": [
+      {
+        "from": "09:00 AM",
+        "to": "10:00 AM",
+        "location_short": "Sartoria",
+        "location_full": "Scende nella Sartoria."
+      },
+      {
+        "from": "10:00 AM",
+        "to": "05:00 PM",
+        "location_short": "Sartoria",
+        "location_full": "Rimane all'interno della Sartoria."
+      },
+      {
+        "from": "05:00 PM",
+        "to": "11:00 PM",
+        "location_short": "Bancone",
+        "location_full": "Si sposta dietro il bancone della Sartoria."
+      },
+      {
+        "from": "11:00 PM",
+        "to": "12:00 AM",
+        "location_short": "Città",
+        "location_full": "Lascia la Sartoria e cammina attraverso la città."
+      },
+      {
+        "from": "12:00 AM",
+        "to": "01:00 AM",
+        "location_short": "Laguna",
+        "location_full": "Cammina attraverso i campi fuori città verso la Laguna del Pescatore."
+      },
+      {
+        "from": "01:00 AM",
+        "to": "01:30 AM",
+        "location_short": "Tenuta Sindaco",
+        "location_full": "Cammina verso la Tenuta del Sindaco sulla costa."
+      },
+      {
+        "from": "01:30 AM",
+        "to": "02:00 AM",
+        "location_short": "Pontile",
+        "location_full": "Attraversa il pontile."
+      },
+      {
+        "from": "02:00 AM",
+        "to": "04:00 AM",
+        "location_short": "Isola",
+        "location_full": "Si ferma vicino all'albero sulla piccola isola."
+      },
+      {
+        "from": "04:00 AM",
+        "to": "05:00 AM",
+        "location_short": "Laguna",
+        "location_full": "Torna indietro verso la Laguna del Pescatore."
+      },
+      {
+        "from": "05:00 AM",
+        "to": "06:00 AM",
+        "location_short": "Verso città",
+        "location_full": "Si dirige nuovamente verso la città."
+      },
+      {
+        "from": "06:00 AM",
+        "to": "07:00 AM",
+        "location_short": "Sartoria",
+        "location_full": "Cammina attraverso la città ed entra nella Sartoria."
+      },
+      {
+        "from": "07:00 AM",
+        "to": "09:00 AM",
+        "location_short": "Dorme",
+        "location_full": "Sale nella sua stanza per dormire."
+      }
+    ]
+  },
+  "jina": {
+    "name": "Jina",
+    "emoji": "<:Jina:1489970064517238915>",
+    "schedule": [
+      {
+        "from": "03:00 AM",
+        "to": "12:00 PM",
+        "location_short": "Rovine",
+        "location_full": "Osserva le rovine al di fuori della sua rovina chiusa."
+      },
+      {
+        "from": "12:00 PM",
+        "to": "03:00 PM",
+        "location_short": "Tempio",
+        "location_full": "Cammina verso il Tempio del Cielo Notturno."
+      },
+      {
+        "from": "03:00 PM",
+        "to": "11:00 PM",
+        "location_short": "Biblioteca",
+        "location_full": "Cammina verso la Biblioteca."
+      },
+      {
+        "from": "11:00 PM",
+        "to": "03:00 AM",
+        "location_short": "Tenda",
+        "location_full": "Ritorna alla tenda di Hekla per dormire."
+      }
+    ]
+  },
+  "kenli": {
+    "name": "Kenli",
+    "emoji": "<:Kenli:1489969879082602547>",
+    "schedule": [
+      {
+        "from": "05:00 AM",
+        "to": "09:00 AM",
+        "location_short": "Giardino",
+        "location_full": "Si sveglia e si dirige verso il giardino sul retro della Tenuta del Sindaco."
+      },
+      {
+        "from": "09:00 AM",
+        "to": "10:00 AM",
+        "location_short": "Municipio",
+        "location_full": "Cammina verso il Municipio."
+      },
+      {
+        "from": "10:00 AM",
+        "to": "06:50 PM",
+        "location_short": "Ufficio",
+        "location_full": "Fa un pisolino nel suo ufficio."
+      },
+      {
+        "from": "06:50 PM",
+        "to": "10:00 PM",
+        "location_short": "Taverna",
+        "location_full": "Si trova nella Taverna."
+      },
+      {
+        "from": "10:00 PM",
+        "to": "11:30 PM",
+        "location_short": "Verso Tenuta",
+        "location_full": "Ritorna verso la Tenuta del Sindaco."
+      },
+      {
+        "from": "11:30 PM",
+        "to": "05:00 AM",
+        "location_short": "Dorme",
+        "location_full": "Va a dormire sul divano."
+      }
+    ]
+  },
+  "kenyatta": {
+    "name": "Kenyatta",
+    "emoji": "<:Kenyatta:1489969722878464161>",
+    "schedule": [
+      {
+        "from": "07:00 AM",
+        "to": "05:00 PM",
+        "location_short": "Municipio",
+        "location_full": "Cammina verso il Municipio per lavorare."
+      },
+      {
+        "from": "05:00 PM",
+        "to": "09:00 PM",
+        "location_short": "Biblioteca",
+        "location_full": "Cammina verso la Biblioteca."
+      },
+      {
+        "from": "09:00 PM",
+        "to": "03:00 AM",
+        "location_short": "Scuderie",
+        "location_full": "Cammina verso le Scuderie Centrali di Kilima."
+      },
+      {
+        "from": "03:00 AM",
+        "to": "07:00 AM",
+        "location_short": "Tenuta Sindaco",
+        "location_full": "Ritorna alla Tenuta del Sindaco per dormire."
+      }
+    ]
+  },
+  "naio": {
+    "name": "Nai'o",
+    "emoji": "<:Naio:1489969571225010307>",
+    "schedule": [
+      {
+        "from": "04:00 AM",
+        "to": "12:00 PM",
+        "location_short": "Scuderie",
+        "location_full": "Si trova alle Scuderie Centrali di Kilima."
+      },
+      {
+        "from": "12:00 PM",
+        "to": "12:01 PM",
+        "location_short": "Bacheca",
+        "location_full": "Cammina verso la bacheca del viaggio rapido delle Scuderie Centrali."
+      },
+      {
+        "from": "12:01 PM",
+        "to": "06:00 PM",
+        "location_short": "Sambuco",
+        "location_full": "Arriva alle Scuderie Centrali nel Bosco di Sambuco e rimane vicino alla bacheca del viaggio rapido."
+      },
+      {
+        "from": "06:00 PM",
+        "to": "06:01 PM",
+        "location_short": "Bacheca",
+        "location_full": "Usa la bacheca del viaggio rapido."
+      },
+      {
+        "from": "06:01 PM",
+        "to": "08:00 PM",
+        "location_short": "Verso casa",
+        "location_full": "Arriva alle Scuderie Centrali di Kilima e cammina verso casa."
+      },
+      {
+        "from": "08:00 PM",
+        "to": "10:00 PM",
+        "location_short": "Cucina",
+        "location_full": "Arriva alla casa della famiglia Daiya e si ferma in cucina."
+      },
+      {
+        "from": "10:00 PM",
+        "to": "12:00 AM",
+        "location_short": "Ormuu",
+        "location_full": "Lascia la casa e cammina verso il recinto degli Ormuu vicino al fienile di Badruu."
+      },
+      {
+        "from": "12:00 AM",
+        "to": "04:00 AM",
+        "location_short": "Dorme",
+        "location_full": "Lascia il recinto degli Ormuu e torna nella sua stanza per dormire."
+      }
+    ]
+  },
+  "najuma": {
+    "name": "Najuma",
+    "emoji": "<:Najuma:1489969436336193538>",
+    "schedule": [
+      {
+        "from": "10:00 AM",
+        "to": "04:00 PM",
+        "location_short": "Stagno",
+        "location_full": "Si sveglia e cammina sul lato est dello stagno vicino a casa sua."
+      },
+      {
+        "from": "04:00 PM",
+        "to": "08:00 PM",
+        "location_short": "Officina",
+        "location_full": "Cammina verso la sua officina."
+      },
+      {
+        "from": "08:00 PM",
+        "to": "11:00 PM",
+        "location_short": "Picnic",
+        "location_full": "Si sposta al tavolo da picnic davanti a casa sua."
+      },
+      {
+        "from": "11:00 PM",
+        "to": "05:00 AM",
+        "location_short": "Officina",
+        "location_full": "Ritorna alla sua officina."
+      },
+      {
+        "from": "05:00 AM",
+        "to": "10:00 AM",
+        "location_short": "Dorme",
+        "location_full": "Ritorna nella sua stanza per dormire."
+      }
+    ]
+  },
+  "reth": {
+    "name": "Reth",
+    "emoji": "<:Reth:1489969253061754910>",
+    "schedule": [
+      {
+        "from": "12:00 AM",
+        "to": "04:00 AM",
+        "location_short": "Sotterraneo",
+        "location_full": "Va nel Sotterraneo."
+      },
+      {
+        "from": "04:00 AM",
+        "to": "05:00 AM",
+        "location_short": "Magazzino",
+        "location_full": "Lascia il Sotterraneo dal suo magazzino."
+      },
+      {
+        "from": "05:00 AM",
+        "to": "08:00 AM",
+        "location_short": "Sentiero",
+        "location_full": "Rimane sul sentiero dietro la Sartoria."
+      },
+      {
+        "from": "08:00 AM",
+        "to": "05:00 PM",
+        "location_short": "Taverna",
+        "location_full": "Cammina verso la Taverna e inizia a lavorare."
+      },
+      {
+        "from": "05:00 PM",
+        "to": "08:00 PM",
+        "location_short": "Sartoria",
+        "location_full": "Lascia il lavoro alla Taverna e cammina verso la Sartoria."
+      },
+      {
+        "from": "08:00 PM",
+        "to": "12:00 AM",
+        "location_short": "Magazzino",
+        "location_full": "Lascia la Sartoria e torna al suo magazzino."
+      }
+    ]
+  },
+  "sifuu": {
+    "name": "Sifuu",
+    "emoji": "<:Sifuu:1489969135827025980>",
+    "schedule": [
+      {
+        "from": "04:00 AM",
+        "to": "05:00 AM",
+        "location_short": "Scuderie",
+        "location_full": "Esce dalla sua stanza e cammina verso la bacheca del viaggio rapido delle Scuderie Centrali di Kilima."
+      },
+      {
+        "from": "05:00 AM",
+        "to": "12:00 PM",
+        "location_short": "Sambuco",
+        "location_full": "Rimane vicino al piccolo ponte nel Bosco di Sambuco."
+      },
+      {
+        "from": "12:00 PM",
+        "to": "02:00 PM",
+        "location_short": "Bacheca",
+        "location_full": "Cammina verso la bacheca del viaggio rapido nel Bosco di Sambuco."
+      },
+      {
+        "from": "02:00 PM",
+        "to": "08:00 PM",
+        "location_short": "Forgia",
+        "location_full": "Arriva nella Valle di Kilima e cammina verso la Forgia."
+      },
+      {
+        "from": "08:00 PM",
+        "to": "12:00 AM",
+        "location_short": "Taverna",
+        "location_full": "Lascia la Forgia e cammina verso la Taverna."
+      },
+      {
+        "from": "12:00 AM",
+        "to": "04:00 AM",
+        "location_short": "Casa",
+        "location_full": "Lascia la Taverna e torna a casa per dormire."
+      }
+    ],
+    "notes": [
+      "La routine di Sifuu cambia dopo aver completato la missione legata alla Forgia."
+    ]
+  },
+  "subira": {
+    "name": "Subira",
+    "emoji": "<:Subira:1489968994545963118>",
+    "schedule": [
+      {
+        "from": "04:00 AM",
+        "to": "04:01 AM",
+        "location_short": "Scuderie",
+        "location_full": "Lascia la sua stanza e cammina verso la bacheca del viaggio rapido delle Scuderie Centrali di Kilima."
+      },
+      {
+        "from": "04:01 AM",
+        "to": "10:00 AM",
+        "location_short": "Sambuco",
+        "location_full": "Appare alle Scuderie Centrali nel Bosco di Sambuco e cammina verso una scogliera fuori dalla Grotta dei Fiorcremisi."
+      },
+      {
+        "from": "10:00 AM",
+        "to": "08:00 PM",
+        "location_short": "Scuderie Sambuco",
+        "location_full": "Cammina verso la grotta delle Scuderie Centrali nel Bosco di Sambuco e rimane vicino al pilastro centrale."
+      },
+      {
+        "from": "08:00 PM",
+        "to": "08:01 PM",
+        "location_short": "Bacheca",
+        "location_full": "Cammina verso la bacheca del viaggio rapido."
+      },
+      {
+        "from": "08:01 PM",
+        "to": "12:00 AM",
+        "location_short": "Locanda",
+        "location_full": "Appare alle Scuderie Centrali di Kilima e cammina verso la Locanda Corna di Ormuu, dove si ferma accanto alla reception."
+      },
+      {
+        "from": "12:00 AM",
+        "to": "04:00 AM",
+        "location_short": "Dorme",
+        "location_full": "Cammina verso la sua stanza per dormire."
+      }
+    ]
+  },
+  "tamala": {
+    "name": "Tamala",
+    "emoji": "<:Tamala:1489965916866216159>",
+    "schedule": [
+      {
+        "from": "04:00 AM",
+        "to": "04:01 AM",
+        "location_short": "Sambuco",
+        "location_full": "Lascia casa e cammina verso il Bosco di Sambuco."
+      },
+      {
+        "from": "04:01 AM",
+        "to": "10:00 AM",
+        "location_short": "Pendio Mellifero",
+        "location_full": "Appare nel Bosco di Sambuco e cammina verso il Pendio Mellifero."
+      },
+      {
+        "from": "10:00 AM",
+        "to": "04:00 PM",
+        "location_short": "Foltobosco",
+        "location_full": "Attraversa la Caverna Lilla per raggiungere il Folto­bosco."
+      },
+      {
+        "from": "04:00 PM",
+        "to": "04:30 PM",
+        "location_short": "Verso negozio",
+        "location_full": "Inizia a camminare verso il suo Negozio di Pozioni."
+      },
+      {
+        "from": "04:30 PM",
+        "to": "12:00 AM",
+        "location_short": "Pozioni",
+        "location_full": "Appare al Negozio di Pozioni."
+      },
+      {
+        "from": "12:00 AM",
+        "to": "12:01 AM",
+        "location_short": "Verso Bahari",
+        "location_full": "Inizia a camminare verso Bahari."
+      },
+      {
+        "from": "12:01 AM",
+        "to": "01:00 AM",
+        "location_short": "Bahari",
+        "location_full": "Appare a Bahari e cammina verso casa."
+      },
+      {
+        "from": "01:00 AM",
+        "to": "04:00 AM",
+        "location_short": "Dorme",
+        "location_full": "Va nella sua camera da letto per dormire."
+      }
+    ],
+    "notes": [
+      "La routine di Tamala può variare in base ai progressi nelle missioni legate al Bosco di Sambuco."
+    ]
+  },
+  "tau": {
+    "name": "Tau",
+    "emoji": "<:Tau:1489965701207687169>",
+    "schedule": [
+      {
+        "from": "04:00",
+        "to": "08:00",
+        "location_short": "Promontori Celati",
+        "location_full": "Cammina dal Boschetto di Hassian allo stagno di Promontori Celati."
+      },
+      {
+        "from": "08:00",
+        "to": "08:01",
+        "location_short": "Verso bacheca",
+        "location_full": "Lascia lo stagno e usa la bacheca del viaggio rapido."
+      },
+      {
+        "from": "08:01",
+        "to": "14:00",
+        "location_short": "Passaggio dei Chapaa",
+        "location_full": "Arriva nella Valle di Kilima e cammina verso i campi di Passaggio dei Chapaa, tra i mulini a vento."
+      },
+      {
+        "from": "14:00",
+        "to": "14:01",
+        "location_short": "Verso Bahari",
+        "location_full": "Cammina verso Bahari."
+      },
+      {
+        "from": "14:01",
+        "to": "20:00",
+        "location_short": "Scuderie",
+        "location_full": "Arriva alla bacheca del viaggio rapido delle Scuderie Centrali e si ferma vicino allo stagno a sud della grotta delle Scuderie."
+      },
+      {
+        "from": "20:00",
+        "to": "20:01",
+        "location_short": "Verso Scuderie",
+        "location_full": "Cammina verso la bacheca delle Scuderie Centrali."
+      },
+      {
+        "from": "20:01",
+        "to": "00:00",
+        "location_short": "Collina",
+        "location_full": "Arriva alla bacheca di Promontori Celati e cammina per fare la guardia sulla collina oltre Promontori Celati."
+      },
+      {
+        "from": "00:00",
+        "to": "04:00",
+        "location_short": "Boschetto",
+        "location_full": "Cammina verso il Boschetto di Hassian per andare a dormire."
+      }
+    ],
+    "notes": [
+      "Tau rimane sempre al fianco di Hassian e la sua routine cambia insieme a quella del suo padrone."
+    ]
+  },
+  "tish": {
+    "name": "Tish",
+    "emoji": "<:Tish:1489964994073329685>",
+    "schedule": [
+      {
+        "from": "06:00 AM",
+        "to": "09:00 AM",
+        "location_short": "Albero",
+        "location_full": "Cammina dalla sua stanza al grande albero fuori dal sentiero vicino alla Laguna del Pescatore."
+      },
+      {
+        "from": "09:00 AM",
+        "to": "05:00 PM",
+        "location_short": "Negozio",
+        "location_full": "Cammina verso il Negozio di mobili."
+      },
+      {
+        "from": "05:00 PM",
+        "to": "10:00 PM",
+        "location_short": "Sartoria",
+        "location_full": "Lascia il Negozio di mobili e cammina verso la Sartoria per visitare Jel e Reth."
+      },
+      {
+        "from": "10:00 PM",
+        "to": "06:00 AM",
+        "location_short": "Casa",
+        "location_full": "Lascia la Sartoria e torna a casa per dormire."
+      }
+    ]
+  },
+  "ulfe": {
+    "name": "Ulfe",
+    "emoji": "<:Ulfe:1489963594258059415>",
+    "schedule": [
+      {
+        "from": "08:00 AM",
+        "to": "09:50 AM",
+        "location_short": "Sambuco",
+        "location_full": "Esce dalla Strada di Zendruu e raggiunge le Scuderie di Sambuco, poi scende verso la Grotta dei Fiorcremisi."
+      },
+      {
+        "from": "09:50 AM",
+        "to": "02:00 PM",
+        "location_short": "Fiorcremisi",
+        "location_full": "Si ferma all'ingresso della Grotta dei Fiorcremisi."
+      },
+      {
+        "from": "02:00 PM",
+        "to": "02:50 PM",
+        "location_short": "Attraversa grotta",
+        "location_full": "Passa attraverso la Grotta dei Fiorcremisi."
+      },
+      {
+        "from": "02:50 PM",
+        "to": "08:00 PM",
+        "location_short": "Vecchio Porto",
+        "location_full": "Appare al Vecchio Porto Marino."
+      },
+      {
+        "from": "08:00 PM",
+        "to": "09:50 PM",
+        "location_short": "Palude",
+        "location_full": "Va verso la Palude Okanaa passando a nord della Grotta dei Fiorcremisi."
+      },
+      {
+        "from": "09:50 PM",
+        "to": "04:00 AM",
+        "location_short": "Sambuco",
+        "location_full": "Appare sopra il pontile delle Scuderie di Sambuco."
+      },
+      {
+        "from": "04:00 AM",
+        "to": "04:50 AM",
+        "location_short": "Verso Zendruu",
+        "location_full": "Va verso la Strada di Zendruu tramite il pontile."
+      },
+      {
+        "from": "04:50 AM",
+        "to": "08:00 AM",
+        "location_short": "Dorme",
+        "location_full": "Scompare attraverso la roccia e va nella sua stanza."
+      }
+    ],
+    "notes": [
+      "Ulfe ottiene una routine giornaliera solo dopo aver completato le missioni principali ‘La Voce del Bosco’ e ‘Il Richiamo della Notte’. Prima di allora compare esclusivamente durante queste missioni."
+    ]
+  },
+  "zeki": {
+    "name": "Zeki",
+    "emoji": "<:Zeki:1489963280452685845>",
+    "schedule": [
+      {
+        "from": "08:00 AM",
+        "to": "05:00 PM",
+        "location_short": "Emporio",
+        "location_full": "Si sveglia e cammina verso l'Emporio per aprirlo durante il giorno."
+      },
+      {
+        "from": "05:00 PM",
+        "to": "09:00 PM",
+        "location_short": "Taverna",
+        "location_full": "Lascia l'Emporio e cammina verso la Taverna."
+      },
+      {
+        "from": "09:00 PM",
+        "to": "09:01 PM",
+        "location_short": "Verso Sotterraneo",
+        "location_full": "Lascia la Taverna e cammina verso il Sotterraneo."
+      },
+      {
+        "from": "09:01 PM",
+        "to": "02:30 AM",
+        "location_short": "Sotterraneo",
+        "location_full": "Appare nel Sotterraneo."
+      },
+      {
+        "from": "02:30 AM",
+        "to": "08:00 AM",
+        "location_short": "Casa",
+        "location_full": "Lascia il Sotterraneo e cammina verso casa."
+      }
+    ]
+  }
+}
