@@ -1,0 +1,10 @@
+{
+    "Maji Market": {
+        "start_announced": false,
+        "end_announced": false
+    },
+    "Capodanno Lunare": {
+        "start_announced": true,
+        "end_announced": true
+    }
+}
