@@ -34,12 +34,12 @@ class Events(commands.Cog):
     async def fetch_remote_events(self):
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(REMOTE_EVENTS_URL) as resp:
-                    if resp.status != 200:
-                        print(f"Errore JSON remoto: {resp.status}")
-                        return None
-                    data = await resp.json()
-                    return data
+    async with session.get(REMOTE_EVENTS_URL) as resp:
+        if resp.status != 200:
+            print(f"Errore JSON remoto: {resp.status}")
+            return None
+        data = await resp.json(content_type=None)
+        return data
         except Exception as e:
             print(f"Errore fetch remoto: {e}")
             return None
