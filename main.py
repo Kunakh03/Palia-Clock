@@ -159,6 +159,6 @@ async def on_ready():
 
 # === AVVIO BOT ===
 
-TOKEN = "MTQ4MzI3OTc2MTY4OTE0OTQ3MA.GMP1_a.1uKKg99joInEESMZggma4Dm-y_JY7pW_8Oldgg"
-
+import os
+TOKEN = os.getenv("DISCORD_TOKEN")
 bot.run(TOKEN)
