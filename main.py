@@ -31,6 +31,7 @@ class MyBot(commands.Bot):
         await self.load_extension("cogs.paliatime")
         await self.load_extension("cogs.npc")
         await self.load_extension("cogs.events")
+        await self.load_extension("cogs.dynamic_events")
 
         synced = await self.tree.sync()
         print("Comandi sincronizzati:", [cmd.name for cmd in synced])
