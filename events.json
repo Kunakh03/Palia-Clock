@@ -6,7 +6,8 @@
     "end": "2026-05-12T09:00:00",
     "timezone": "America/Los_Angeles",
     "announce_1h_before_start": true,
-    "announce_1h_before_end": true
+    "announce_1h_before_end": true,
+    "color": "#8A2BE2"
   },
   {
     "name": "Mercato Maji",
@@ -15,7 +16,8 @@
     "end": "2026-06-09T09:00:00",
     "timezone": "America/Los_Angeles",
     "announce_1h_before_start": true,
-    "announce_1h_before_end": true
+    "announce_1h_before_end": true,
+    "color": "#8A2BE2"
   },
   {
     "name": "Spiritfest",
@@ -24,7 +26,8 @@
     "end": "2026-10-24T09:00:00",
     "timezone": "America/Los_Angeles",
     "announce_1h_before_start": true,
-    "announce_1h_before_end": true
+    "announce_1h_before_end": true,
+    "color": "#FF7F50"
   },
   {
     "name": "Fantasia d'Autunno",
@@ -33,6 +36,7 @@
     "end": "2026-11-19T09:00:00",
     "timezone": "America/Los_Angeles",
     "announce_1h_before_start": true,
-    "announce_1h_before_end": true
+    "announce_1h_before_end": true,
+    "color": "#CD7F32"
   }
 ]
