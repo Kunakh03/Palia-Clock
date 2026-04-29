@@ -69,7 +69,7 @@ class Events(commands.Cog):
                     if resp.status != 200:
                         print(f"Errore JSON remoto: {resp.status}")
                         return None
-                    return await resp.json()
+                    return json.loads(await resp.text())
         except Exception as e:
             print(f"Errore fetch remoto: {e}")
             return None
