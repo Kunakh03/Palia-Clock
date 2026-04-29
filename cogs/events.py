@@ -5,7 +5,7 @@ import json
 import aiohttp
 from datetime import datetime, timedelta
 
-REMOTE_EVENTS_URL = "https://raw.githubusercontent.com/Claudio/Palia-Clock/main/events.json"
+REMOTE_EVENTS_URL = "https://raw.githubusercontent.com/Kunakh03/Palia-Clock/main/events.json"
 LOCAL_EVENTS_FILE = "events.json"
 
 ANNOUNCE_CHANNEL_ID = 1483229095738212533  # canale annunci
