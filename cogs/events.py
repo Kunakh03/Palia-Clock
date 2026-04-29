@@ -3,7 +3,7 @@ from discord.ext import commands, tasks
 from zoneinfo import ZoneInfo
 import json
 import aiohttp
-from datetime import datetime
+from datetime import datetime, timedelta
 
 REMOTE_EVENTS_URL = "https://raw.githubusercontent.com/Claudio/Palia-Clock/main/events.json"
 LOCAL_EVENTS_FILE = "events.json"
@@ -16,15 +16,15 @@ ANNOUNCE_CHANNEL_ID = 1483229095738212533  # canale annunci
 # ---------------------------------------------------
 
 def build_recurring_embed(event: dict, start_ts: int, start_rome: datetime):
-    # Titolo con emoji (solo se presenti)
     emoji_start = event.get("emoji", "")
     emoji_end = event.get("emoji_end", "")
+
     title = f"{emoji_start} {event['name']} {emoji_end}".strip()
 
-    # Testo automatico
     ora = start_rome.strftime("%H:%M")
+
     description = (
-        f"L'evento inizierà domani alle {ora}!\n"
+        f"L'evento inizierà alle {ora}!\n"
         f"**Countdown:** <t:{start_ts}:R>"
     )
 
@@ -118,15 +118,12 @@ class Events(commands.Cog):
             start_rome = start.astimezone(ZoneInfo("Europe/Rome"))
             end_rome = end.astimezone(ZoneInfo("Europe/Rome"))
 
-            # IGNORA EVENTI PASSATI
             if now_rome > end_rome:
                 continue
 
-            # Stato evento
             if name not in self.state:
                 self.state[name] = {"start": False, "end": False}
 
-            # Timestamp UNIX
             start_ts = int(start.timestamp())
             end_ts = int(end.timestamp())
 
@@ -141,9 +138,13 @@ class Events(commands.Cog):
             # Annuncio 1h prima della fine
             if event["announce_1h_before_end"]:
                 if not self.state[name]["end"] and now_rome >= (end_rome - timedelta(hours=1)):
+                    ora_fine = end_rome.strftime("%H:%M")
                     embed = discord.Embed(
                         title=f"{event.get('emoji', '')} {name}",
-                        description=f"L'evento terminerà tra 1 ora!",
+                        description=(
+                            f"L'evento terminerà alle {ora_fine}!\n"
+                            f"**Countdown:** <t:{end_ts}:R>"
+                        ),
                         color=0xe67e22
                     )
                     embed.set_footer(text="Palia Clock • Evento")
