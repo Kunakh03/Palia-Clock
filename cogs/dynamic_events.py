@@ -70,13 +70,31 @@ class DynamicEvents(commands.Cog):
     async def add_event(self, interaction: discord.Interaction, nome: str, descrizione: str, data: str):
         """
         /addevents nome descrizione data
-        data = formato ISO: 2026-05-05T09:00:00
+        data = formato italiano: GG-MM-AAAA HH:MM
         """
 
+        # --- VALIDAZIONE DATA IN FORMATO ITALIANO ---
+        try:
+            # Converte "GG-MM-AAAA HH:MM" → datetime
+            dt = datetime.strptime(data, "%d-%m-%Y %H:%M")
+
+            # Converte in ISO standard per il JSON
+            data_iso = dt.strftime("%Y-%m-%dT%H:%M:%S")
+
+        except ValueError:
+            await interaction.response.send_message(
+                "❌ Formato data non valido.\n"
+                "Usa **GG-MM-AAAA HH:MM**\n"
+                "Esempio: `05-05-2026 09:00`",
+                ephemeral=True
+            )
+            return
+
+        # Evento dinamico
         event = {
             "name": nome,
             "description": descrizione,
-            "start": data,
+            "start": data_iso,
             "timezone": "Europe/Rome",
             "color": "#FFD700"
         }
@@ -88,7 +106,10 @@ class DynamicEvents(commands.Cog):
         channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
         await channel.send(embed=embed)
 
-        await interaction.response.send_message(f"Evento dinamico **{nome}** aggiunto e annunciato.", ephemeral=True)
+        await interaction.response.send_message(
+            f"Evento dinamico **{nome}** aggiunto e annunciato.",
+            ephemeral=True
+        )
 
     # ---------------------------
     # CANCELLAZIONE AUTOMATICA
@@ -101,9 +122,15 @@ class DynamicEvents(commands.Cog):
 
         new_list = []
         for event in self.events:
-            start_dt = datetime.fromisoformat(event["start"]).replace(
-                tzinfo=ZoneInfo(event.get("timezone", "Europe/Rome"))
-            )
+            try:
+                start_dt = datetime.fromisoformat(event["start"]).replace(
+                    tzinfo=ZoneInfo(event.get("timezone", "Europe/Rome"))
+                )
+            except Exception:
+                # Evento corrotto → lo eliminiamo
+                changed = True
+                continue
+
             if now < start_dt:
                 new_list.append(event)
             else:
@@ -112,7 +139,7 @@ class DynamicEvents(commands.Cog):
         if changed:
             self.events = new_list
             self.save_events()
-            print("Eventi dinamici scaduti rimossi.")
+            print("Eventi dinamici scaduti o invalidi rimossi.")
 
     @cleanup_events.before_loop
     async def before_cleanup(self):
