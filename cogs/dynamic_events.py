@@ -36,6 +36,24 @@ def build_dynamic_embed(event: dict):
     return embed
 
 
+def build_end_announcement(event: dict):
+    tz = ZoneInfo(event.get("timezone", "Europe/Rome"))
+    end_dt = datetime.fromisoformat(event["end"]).replace(tzinfo=tz)
+    end_ts = int(end_dt.timestamp())
+
+    embed = discord.Embed(
+        title=f"📌 Fine evento: {event['name']}",
+        description=(
+            f"L'evento terminerà alle <t:{end_ts}:t>!\n"
+            f"**Countdown:** <t:{end_ts}:R>"
+        ),
+        color=0xe67e22
+    )
+
+    embed.set_footer(text="Palia Clock • Evento dinamico")
+    return embed
+
+
 # ---------------------------------------------------
 # COG EVENTI DINAMICI
 # ---------------------------------------------------
@@ -46,6 +64,7 @@ class DynamicEvents(commands.Cog):
         self.events = []
         self.load_events()
         self.cleanup_events.start()
+        self.check_end_announcements.start()
 
     # ---------------------------
     # CARICAMENTO / SALVATAGGIO
@@ -63,53 +82,85 @@ class DynamicEvents(commands.Cog):
             json.dump(self.events, f, indent=2)
 
     # ---------------------------
+    # AUTOCOMPLETE GUIDATO
+    # ---------------------------
+
+    @staticmethod
+    def autocomplete_hint():
+        return [
+            app_commands.Choice(
+                name="Inserire nel formato: GG-MM-AAAA HH:MM",
+                value="GG-MM-AAAA HH:MM"
+            )
+        ]
+
+    # ---------------------------
     # SLASH COMMAND /addevents
     # ---------------------------
 
     @app_commands.command(name="addevents", description="Aggiunge un evento dinamico")
+    @app_commands.describe(
+        inizio="Inserire GG-MM-AAAA HH:MM",
+        fine="Inserire GG-MM-AAAA HH:MM"
+    )
     async def add_event(
         self,
         interaction: discord.Interaction,
         nome: str,
         descrizione: str,
-        data: str
+        inizio: str,
+        fine: str
     ):
         """
-        /addevents nome descrizione data
-        data = formato italiano: GG-MM-AAAA HH:MM
+        /addevents nome descrizione inizio fine
         """
 
-        # --- VALIDAZIONE DATA IN FORMATO ITALIANO ---
+        # --- VALIDAZIONE INIZIO ---
         try:
-            dt = datetime.strptime(data, "%d-%m-%Y %H:%M")
-            data_iso = dt.strftime("%Y-%m-%dT%H:%M:%S")
+            dt_start = datetime.strptime(inizio, "%d-%m-%Y %H:%M")
+            start_iso = dt_start.strftime("%Y-%m-%dT%H:%M:%S")
         except ValueError:
             await interaction.response.send_message(
-                "❌ Formato data non valido.\n"
-                "Usa **GG-MM-AAAA HH:MM**\n"
-                "Esempio: `05-05-2026 09:00`",
+                "❌ Formato data INIZIO non valido.\n"
+                "Usa **GG-MM-AAAA HH:MM**",
                 ephemeral=True
             )
             return
 
+        # --- VALIDAZIONE FINE ---
+        try:
+            dt_end = datetime.strptime(fine, "%d-%m-%Y %H:%M")
+            end_iso = dt_end.strftime("%Y-%m-%dT%H:%M:%S")
+        except ValueError:
+            await interaction.response.send_message(
+                "❌ Formato data FINE non valido.\n"
+                "Usa **GG-MM-AAAA HH:MM**",
+                ephemeral=True
+            )
+            return
+
+        # Evento dinamico
         event = {
             "name": nome,
             "description": descrizione,
-            "start": data_iso,
+            "start": start_iso,
+            "end": end_iso,
             "timezone": "Europe/Rome",
-            "color": "#FFD700"
+            "color": "#FFD700",
+            "end_announced": False
         }
 
         self.events.append(event)
         self.save_events()
 
+        # Annuncio immediato dell'inizio
         embed = build_dynamic_embed(event)
         channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
 
         if channel is None:
             print("ERRORE: Canale annunci non trovato.")
             await interaction.response.send_message(
-                "❌ Errore: canale annunci non trovato. Controlla l'ID nel codice.",
+                "❌ Errore: canale annunci non trovato.",
                 ephemeral=True
             )
             return
@@ -122,61 +173,49 @@ class DynamicEvents(commands.Cog):
         )
 
     # ---------------------------
-    # AUTOCOMPLETE PER IL PARAMETRO data
+    # AUTOCOMPLETE PER INIZIO E FINE
     # ---------------------------
 
-    @add_event.autocomplete("data")
-    async def add_event_data_autocomplete(
-        self,
-        interaction: discord.Interaction,
-        current: str
-    ):
-        """
-        Suggerisce date in formato italiano mentre si digita.
-        Formato: GG-MM-AAAA HH:MM
-        """
+    @add_event.autocomplete("inizio")
+    async def autocomplete_inizio(self, interaction, current):
+        return self.autocomplete_hint()
+
+    @add_event.autocomplete("fine")
+    async def autocomplete_fine(self, interaction, current):
+        return self.autocomplete_hint()
+
+    # ---------------------------
+    # ANNUNCIO FINE EVENTO (giorno prima alle 18:00)
+    # ---------------------------
+
+    @tasks.loop(minutes=1)
+    async def check_end_announcements(self):
         now = datetime.now(ZoneInfo("Europe/Rome"))
-        suggestions = []
+        channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
+        if channel is None:
+            return
 
-        # Oggi alle 18:00 e 21:00 (se future)
-        for hour in [18, 21]:
-            dt = now.replace(hour=hour, minute=0, second=0, microsecond=0)
-            if dt > now:
-                label = dt.strftime("%d-%m-%Y %H:%M")
-                suggestions.append(
-                    app_commands.Choice(
-                        name=f"Oggi alle {dt.strftime('%H:%M')}",
-                        value=label
-                    )
-                )
+        changed = False
 
-        # Tra 1 ora
-        dt_1h = now + timedelta(hours=1)
-        suggestions.append(
-            app_commands.Choice(
-                name=f"Tra 1 ora ({dt_1h.strftime('%H:%M')})",
-                value=dt_1h.strftime("%d-%m-%Y %H:%M")
+        for event in self.events:
+            if event.get("end_announced"):
+                continue
+
+            end_dt = datetime.fromisoformat(event["end"]).replace(
+                tzinfo=ZoneInfo(event["timezone"])
             )
-        )
 
-        # Domani alle 09:00
-        tomorrow = now + timedelta(days=1)
-        dt_tomorrow = tomorrow.replace(hour=9, minute=0, second=0, microsecond=0)
-        suggestions.append(
-            app_commands.Choice(
-                name="Domani alle 09:00",
-                value=dt_tomorrow.strftime("%d-%m-%Y %H:%M")
-            )
-        )
+            announce_dt = end_dt - timedelta(days=1)
+            announce_dt = announce_dt.replace(hour=18, minute=0, second=0, microsecond=0)
 
-        # Filtro in base a ciò che l'utente sta digitando
-        if current:
-            suggestions = [
-                s for s in suggestions
-                if current in s.value or current in s.name
-            ]
+            if now >= announce_dt:
+                embed = build_end_announcement(event)
+                await channel.send(embed=embed)
+                event["end_announced"] = True
+                changed = True
 
-        return suggestions[:25]
+        if changed:
+            self.save_events()
 
     # ---------------------------
     # CANCELLAZIONE AUTOMATICA
@@ -190,14 +229,14 @@ class DynamicEvents(commands.Cog):
         new_list = []
         for event in self.events:
             try:
-                start_dt = datetime.fromisoformat(event["start"]).replace(
+                end_dt = datetime.fromisoformat(event["end"]).replace(
                     tzinfo=ZoneInfo(event.get("timezone", "Europe/Rome"))
                 )
             except Exception:
                 changed = True
                 continue
 
-            if now < start_dt:
+            if now < end_dt:
                 new_list.append(event)
             else:
                 changed = True
