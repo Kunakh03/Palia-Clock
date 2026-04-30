@@ -34,12 +34,8 @@ def build_start_embed(event: dict):
     start_dt = from_iso(event["start"], event["timezone"])
     start_ts = int(start_dt.timestamp())
 
-    # Countdown bloccato a 00:00 se passato
     now = datetime.now(ZoneInfo(event["timezone"]))
-    if now >= start_dt:
-        countdown = "00:00"
-    else:
-        countdown = f"<t:{start_ts}:R>"
+    countdown = "00:00" if now >= start_dt else f"<t:{start_ts}:R>"
 
     embed = discord.Embed(
         title=event["name"],
@@ -60,10 +56,7 @@ def build_end_embed(event: dict):
     end_ts = int(end_dt.timestamp())
 
     now = datetime.now(ZoneInfo(event["timezone"]))
-    if now >= end_dt:
-        countdown = "00:00"
-    else:
-        countdown = f"<t:{end_ts}:R>"
+    countdown = "00:00" if now >= end_dt else f"<t:{end_ts}:R>"
 
     embed = discord.Embed(
         title=f"📌 Fine evento: {event['name']}",
@@ -107,23 +100,16 @@ class DynamicEvents(commands.Cog):
             json.dump(self.events, f, indent=2)
 
     # ---------------------------
-    # AUTOCOMPLETE GUIDATO
-    # ---------------------------
-
-    @staticmethod
-    def autocomplete_hint():
-        return [
-            app_commands.Choice(
-                name="Inserire nel formato: GG-MM-AAAA HH:MM",
-                value="GG-MM-AAAA HH:MM"
-            )
-        ]
-
-    # ---------------------------
     # COMANDO /addevents
     # ---------------------------
 
     @app_commands.command(name="addevents", description="Aggiunge un evento dinamico")
+    @app_commands.describe(
+        nome="Nome dell'evento",
+        descrizione="Descrizione dell'evento",
+        inizio="Inserire GG-MM-AAAA HH:MM",
+        fine="Inserire GG-MM-AAAA HH:MM"
+    )
     async def add_event(
         self,
         interaction: discord.Interaction,
@@ -178,14 +164,17 @@ class DynamicEvents(commands.Cog):
             ephemeral=True
         )
 
-    # Autocomplete
+    # ---------------------------
+    # AUTOCOMPLETE DISATTIVATO
+    # ---------------------------
+
     @add_event.autocomplete("inizio")
     async def autocomplete_inizio(self, interaction, current):
-        return self.autocomplete_hint()
+        return []
 
     @add_event.autocomplete("fine")
     async def autocomplete_fine(self, interaction, current):
-        return self.autocomplete_hint()
+        return []
 
     # ---------------------------
     # ANNUNCIO FINE EVENTO
@@ -222,7 +211,6 @@ class DynamicEvents(commands.Cog):
 
     @tasks.loop(seconds=30)
     async def update_countdowns(self):
-        now = datetime.now(ZoneInfo("Europe/Rome"))
         channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
 
         for event in self.events:
@@ -230,15 +218,13 @@ class DynamicEvents(commands.Cog):
             msg_id = event.get("start_message_id")
             if msg_id:
                 msg = await channel.fetch_message(msg_id)
-                embed = build_start_embed(event)
-                await msg.edit(embed=embed)
+                await msg.edit(embed=build_start_embed(event))
 
-            # Aggiorna embed fine (se già annunciato)
+            # Aggiorna embed fine
             end_msg_id = event.get("end_message_id")
             if end_msg_id:
                 msg = await channel.fetch_message(end_msg_id)
-                embed = build_end_embed(event)
-                await msg.edit(embed=embed)
+                await msg.edit(embed=build_end_embed(event))
 
     # ---------------------------
     # CLEANUP
