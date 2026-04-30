@@ -69,7 +69,16 @@ class Events(commands.Cog):
                     if resp.status != 200:
                         print(f"Errore JSON remoto: {resp.status}")
                         return None
-                    return json.loads(await resp.text())
+
+                    # Leggiamo SEMPRE come testo e poi JSON
+                    text = await resp.text()
+
+                    try:
+                        return json.loads(text)
+                    except json.JSONDecodeError:
+                        print("Errore: JSON remoto non valido.")
+                        return None
+
         except Exception as e:
             print(f"Errore fetch remoto: {e}")
             return None
@@ -112,8 +121,13 @@ class Events(commands.Cog):
             name = event["name"]
             tz = ZoneInfo(event["timezone"])
 
-            start = datetime.fromisoformat(event["start"]).replace(tzinfo=tz)
-            end = datetime.fromisoformat(event["end"]).replace(tzinfo=tz)
+            # --- VALIDAZIONE DATE ---
+            try:
+                start = datetime.fromisoformat(event["start"]).replace(tzinfo=tz)
+                end = datetime.fromisoformat(event["end"]).replace(tzinfo=tz)
+            except Exception:
+                print(f"Evento '{name}' ha una data non valida. Saltato.")
+                continue
 
             start_rome = start.astimezone(ZoneInfo("Europe/Rome"))
             end_rome = end.astimezone(ZoneInfo("Europe/Rome"))
