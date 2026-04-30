@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 import json
 
 DYNAMIC_EVENTS_FILE = "dynamic_events.json"
-ANNOUNCE_CHANNEL_ID = 1416482590596141248   # <-- ID aggiornato
+ANNOUNCE_CHANNEL_ID = 1416482590596141248  # canale annunci
 
 
 # ---------------------------------------------------
@@ -55,7 +55,7 @@ class DynamicEvents(commands.Cog):
         try:
             with open(DYNAMIC_EVENTS_FILE, "r", encoding="utf-8") as f:
                 self.events = json.load(f)
-        except:
+        except Exception:
             self.events = []
 
     def save_events(self):
@@ -63,56 +63,17 @@ class DynamicEvents(commands.Cog):
             json.dump(self.events, f, indent=2)
 
     # ---------------------------
-    # AUTOCOMPLETE PER LA DATA
-    # ---------------------------
-
-    @app_commands.autocomplete(data=True)
-    async def autocomplete_data(self, interaction: discord.Interaction, current: str):
-        """
-        Suggerisce date in formato italiano mentre si digita.
-        """
-        now = datetime.now()
-
-        suggestions = []
-
-        # Oggi + orari comuni
-        for hour in [now.hour + 1, 18, 21]:
-            try:
-                dt = now.replace(hour=hour, minute=0, second=0, microsecond=0)
-                if dt > now:
-                    label = dt.strftime("%d-%m-%Y %H:%M")
-                    suggestions.append(app_commands.Choice(name=f"Oggi alle {dt.strftime('%H:%M')}", value=label))
-            except:
-                pass
-
-        # Domani 09:00
-        tomorrow = now + timedelta(days=1)
-        dt_tomorrow = tomorrow.replace(hour=9, minute=0, second=0, microsecond=0)
-        suggestions.append(app_commands.Choice(
-            name=f"Domani alle 09:00",
-            value=dt_tomorrow.strftime("%d-%m-%Y %H:%M")
-        ))
-
-        # Tra 1 ora
-        dt_1h = now + timedelta(hours=1)
-        suggestions.append(app_commands.Choice(
-            name=f"Tra 1 ora ({dt_1h.strftime('%H:%M')})",
-            value=dt_1h.strftime("%d-%m-%Y %H:%M")
-        ))
-
-        # Filtra per ciò che l'utente sta digitando
-        if current:
-            suggestions = [s for s in suggestions if current in s.value]
-
-        return suggestions[:25]
-
-    # ---------------------------
     # SLASH COMMAND /addevents
     # ---------------------------
 
     @app_commands.command(name="addevents", description="Aggiunge un evento dinamico")
-    @app_commands.autocomplete(data=autocomplete_data)
-    async def add_event(self, interaction: discord.Interaction, nome: str, descrizione: str, data: str):
+    async def add_event(
+        self,
+        interaction: discord.Interaction,
+        nome: str,
+        descrizione: str,
+        data: str
+    ):
         """
         /addevents nome descrizione data
         data = formato italiano: GG-MM-AAAA HH:MM
@@ -131,7 +92,6 @@ class DynamicEvents(commands.Cog):
             )
             return
 
-        # Evento dinamico
         event = {
             "name": nome,
             "description": descrizione,
@@ -147,8 +107,9 @@ class DynamicEvents(commands.Cog):
         channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
 
         if channel is None:
+            print("ERRORE: Canale annunci non trovato.")
             await interaction.response.send_message(
-                "❌ Errore: canale annunci non trovato.",
+                "❌ Errore: canale annunci non trovato. Controlla l'ID nel codice.",
                 ephemeral=True
             )
             return
@@ -159,6 +120,63 @@ class DynamicEvents(commands.Cog):
             f"Evento dinamico **{nome}** aggiunto e annunciato.",
             ephemeral=True
         )
+
+    # ---------------------------
+    # AUTOCOMPLETE PER IL PARAMETRO data
+    # ---------------------------
+
+    @add_event.autocomplete("data")
+    async def add_event_data_autocomplete(
+        self,
+        interaction: discord.Interaction,
+        current: str
+    ):
+        """
+        Suggerisce date in formato italiano mentre si digita.
+        Formato: GG-MM-AAAA HH:MM
+        """
+        now = datetime.now(ZoneInfo("Europe/Rome"))
+        suggestions = []
+
+        # Oggi alle 18:00 e 21:00 (se future)
+        for hour in [18, 21]:
+            dt = now.replace(hour=hour, minute=0, second=0, microsecond=0)
+            if dt > now:
+                label = dt.strftime("%d-%m-%Y %H:%M")
+                suggestions.append(
+                    app_commands.Choice(
+                        name=f"Oggi alle {dt.strftime('%H:%M')}",
+                        value=label
+                    )
+                )
+
+        # Tra 1 ora
+        dt_1h = now + timedelta(hours=1)
+        suggestions.append(
+            app_commands.Choice(
+                name=f"Tra 1 ora ({dt_1h.strftime('%H:%M')})",
+                value=dt_1h.strftime("%d-%m-%Y %H:%M")
+            )
+        )
+
+        # Domani alle 09:00
+        tomorrow = now + timedelta(days=1)
+        dt_tomorrow = tomorrow.replace(hour=9, minute=0, second=0, microsecond=0)
+        suggestions.append(
+            app_commands.Choice(
+                name="Domani alle 09:00",
+                value=dt_tomorrow.strftime("%d-%m-%Y %H:%M")
+            )
+        )
+
+        # Filtro in base a ciò che l'utente sta digitando
+        if current:
+            suggestions = [
+                s for s in suggestions
+                if current in s.value or current in s.name
+            ]
+
+        return suggestions[:25]
 
     # ---------------------------
     # CANCELLAZIONE AUTOMATICA
