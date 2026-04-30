@@ -1,12 +1,12 @@
 import discord
 from discord.ext import commands, tasks
 from discord import app_commands
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import json
 
 DYNAMIC_EVENTS_FILE = "dynamic_events.json"
-ANNOUNCE_CHANNEL_ID = 1483229095738212533
+ANNOUNCE_CHANNEL_ID = 1416482590596141248   # <-- ID aggiornato
 
 
 # ---------------------------------------------------
@@ -63,10 +63,55 @@ class DynamicEvents(commands.Cog):
             json.dump(self.events, f, indent=2)
 
     # ---------------------------
+    # AUTOCOMPLETE PER LA DATA
+    # ---------------------------
+
+    @app_commands.autocomplete(data=True)
+    async def autocomplete_data(self, interaction: discord.Interaction, current: str):
+        """
+        Suggerisce date in formato italiano mentre si digita.
+        """
+        now = datetime.now()
+
+        suggestions = []
+
+        # Oggi + orari comuni
+        for hour in [now.hour + 1, 18, 21]:
+            try:
+                dt = now.replace(hour=hour, minute=0, second=0, microsecond=0)
+                if dt > now:
+                    label = dt.strftime("%d-%m-%Y %H:%M")
+                    suggestions.append(app_commands.Choice(name=f"Oggi alle {dt.strftime('%H:%M')}", value=label))
+            except:
+                pass
+
+        # Domani 09:00
+        tomorrow = now + timedelta(days=1)
+        dt_tomorrow = tomorrow.replace(hour=9, minute=0, second=0, microsecond=0)
+        suggestions.append(app_commands.Choice(
+            name=f"Domani alle 09:00",
+            value=dt_tomorrow.strftime("%d-%m-%Y %H:%M")
+        ))
+
+        # Tra 1 ora
+        dt_1h = now + timedelta(hours=1)
+        suggestions.append(app_commands.Choice(
+            name=f"Tra 1 ora ({dt_1h.strftime('%H:%M')})",
+            value=dt_1h.strftime("%d-%m-%Y %H:%M")
+        ))
+
+        # Filtra per ciò che l'utente sta digitando
+        if current:
+            suggestions = [s for s in suggestions if current in s.value]
+
+        return suggestions[:25]
+
+    # ---------------------------
     # SLASH COMMAND /addevents
     # ---------------------------
 
     @app_commands.command(name="addevents", description="Aggiunge un evento dinamico")
+    @app_commands.autocomplete(data=autocomplete_data)
     async def add_event(self, interaction: discord.Interaction, nome: str, descrizione: str, data: str):
         """
         /addevents nome descrizione data
@@ -75,12 +120,8 @@ class DynamicEvents(commands.Cog):
 
         # --- VALIDAZIONE DATA IN FORMATO ITALIANO ---
         try:
-            # Converte "GG-MM-AAAA HH:MM" → datetime
             dt = datetime.strptime(data, "%d-%m-%Y %H:%M")
-
-            # Converte in ISO standard per il JSON
             data_iso = dt.strftime("%Y-%m-%dT%H:%M:%S")
-
         except ValueError:
             await interaction.response.send_message(
                 "❌ Formato data non valido.\n"
@@ -104,6 +145,14 @@ class DynamicEvents(commands.Cog):
 
         embed = build_dynamic_embed(event)
         channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
+
+        if channel is None:
+            await interaction.response.send_message(
+                "❌ Errore: canale annunci non trovato.",
+                ephemeral=True
+            )
+            return
+
         await channel.send(embed=embed)
 
         await interaction.response.send_message(
@@ -127,7 +176,6 @@ class DynamicEvents(commands.Cog):
                     tzinfo=ZoneInfo(event.get("timezone", "Europe/Rome"))
                 )
             except Exception:
-                # Evento corrotto → lo eliminiamo
                 changed = True
                 continue
 
