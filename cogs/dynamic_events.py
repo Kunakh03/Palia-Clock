@@ -10,25 +10,44 @@ ANNOUNCE_CHANNEL_ID = 1416482590596141248  # canale annunci
 
 
 # ---------------------------------------------------
-# EMBED PER EVENTI DINAMICI
+# UTILS
 # ---------------------------------------------------
 
-def build_dynamic_embed(event: dict):
-    tz = ZoneInfo(event.get("timezone", "Europe/Rome"))
-    start_dt = datetime.fromisoformat(event["start"]).replace(tzinfo=tz)
+def parse_datetime(value: str):
+    """Converte GG-MM-AAAA HH:MM → datetime"""
+    return datetime.strptime(value, "%d-%m-%Y %H:%M")
+
+
+def to_iso(dt: datetime):
+    return dt.strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def from_iso(value: str, tz="Europe/Rome"):
+    return datetime.fromisoformat(value).replace(tzinfo=ZoneInfo(tz))
+
+
+# ---------------------------------------------------
+# EMBED
+# ---------------------------------------------------
+
+def build_start_embed(event: dict):
+    start_dt = from_iso(event["start"], event["timezone"])
     start_ts = int(start_dt.timestamp())
 
-    title = event["name"]
-
-    description = (
-        f"{event['description']}\n\n"
-        f"**Inizio:** <t:{start_ts}:t>\n"
-        f"**Countdown:** <t:{start_ts}:R>"
-    )
+    # Countdown bloccato a 00:00 se passato
+    now = datetime.now(ZoneInfo(event["timezone"]))
+    if now >= start_dt:
+        countdown = "00:00"
+    else:
+        countdown = f"<t:{start_ts}:R>"
 
     embed = discord.Embed(
-        title=title,
-        description=description,
+        title=event["name"],
+        description=(
+            f"{event['description']}\n\n"
+            f"**Inizio:** <t:{start_ts}:t>\n"
+            f"**Countdown:** {countdown}"
+        ),
         color=int(event.get("color", "#FFD700").replace("#", "0x"), 16)
     )
 
@@ -36,16 +55,21 @@ def build_dynamic_embed(event: dict):
     return embed
 
 
-def build_end_announcement(event: dict):
-    tz = ZoneInfo(event.get("timezone", "Europe/Rome"))
-    end_dt = datetime.fromisoformat(event["end"]).replace(tzinfo=tz)
+def build_end_embed(event: dict):
+    end_dt = from_iso(event["end"], event["timezone"])
     end_ts = int(end_dt.timestamp())
+
+    now = datetime.now(ZoneInfo(event["timezone"]))
+    if now >= end_dt:
+        countdown = "00:00"
+    else:
+        countdown = f"<t:{end_ts}:R>"
 
     embed = discord.Embed(
         title=f"📌 Fine evento: {event['name']}",
         description=(
             f"L'evento terminerà alle <t:{end_ts}:t>!\n"
-            f"**Countdown:** <t:{end_ts}:R>"
+            f"**Countdown:** {countdown}"
         ),
         color=0xe67e22
     )
@@ -55,7 +79,7 @@ def build_end_announcement(event: dict):
 
 
 # ---------------------------------------------------
-# COG EVENTI DINAMICI
+# COG
 # ---------------------------------------------------
 
 class DynamicEvents(commands.Cog):
@@ -65,6 +89,7 @@ class DynamicEvents(commands.Cog):
         self.load_events()
         self.cleanup_events.start()
         self.check_end_announcements.start()
+        self.update_countdowns.start()
 
     # ---------------------------
     # CARICAMENTO / SALVATAGGIO
@@ -74,7 +99,7 @@ class DynamicEvents(commands.Cog):
         try:
             with open(DYNAMIC_EVENTS_FILE, "r", encoding="utf-8") as f:
                 self.events = json.load(f)
-        except Exception:
+        except:
             self.events = []
 
     def save_events(self):
@@ -95,14 +120,10 @@ class DynamicEvents(commands.Cog):
         ]
 
     # ---------------------------
-    # SLASH COMMAND /addevents
+    # COMANDO /addevents
     # ---------------------------
 
     @app_commands.command(name="addevents", description="Aggiunge un evento dinamico")
-    @app_commands.describe(
-        inizio="Inserire GG-MM-AAAA HH:MM",
-        fine="Inserire GG-MM-AAAA HH:MM"
-    )
     async def add_event(
         self,
         interaction: discord.Interaction,
@@ -111,71 +132,53 @@ class DynamicEvents(commands.Cog):
         inizio: str,
         fine: str
     ):
-        """
-        /addevents nome descrizione inizio fine
-        """
-
-        # --- VALIDAZIONE INIZIO ---
+        # Validazione inizio
         try:
-            dt_start = datetime.strptime(inizio, "%d-%m-%Y %H:%M")
-            start_iso = dt_start.strftime("%Y-%m-%dT%H:%M:%S")
-        except ValueError:
+            dt_start = parse_datetime(inizio)
+        except:
             await interaction.response.send_message(
-                "❌ Formato data INIZIO non valido.\n"
-                "Usa **GG-MM-AAAA HH:MM**",
+                "❌ Formato INIZIO non valido. Usa **GG-MM-AAAA HH:MM**",
                 ephemeral=True
             )
             return
 
-        # --- VALIDAZIONE FINE ---
+        # Validazione fine
         try:
-            dt_end = datetime.strptime(fine, "%d-%m-%Y %H:%M")
-            end_iso = dt_end.strftime("%Y-%m-%dT%H:%M:%S")
-        except ValueError:
+            dt_end = parse_datetime(fine)
+        except:
             await interaction.response.send_message(
-                "❌ Formato data FINE non valido.\n"
-                "Usa **GG-MM-AAAA HH:MM**",
+                "❌ Formato FINE non valido. Usa **GG-MM-AAAA HH:MM**",
                 ephemeral=True
             )
             return
 
-        # Evento dinamico
         event = {
             "name": nome,
             "description": descrizione,
-            "start": start_iso,
-            "end": end_iso,
+            "start": to_iso(dt_start),
+            "end": to_iso(dt_end),
             "timezone": "Europe/Rome",
             "color": "#FFD700",
-            "end_announced": False
+            "end_announced": False,
+            "start_message_id": None,
+            "end_message_id": None
         }
+
+        # Annuncio immediato
+        channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
+        embed = build_start_embed(event)
+        msg = await channel.send(embed=embed)
+        event["start_message_id"] = msg.id
 
         self.events.append(event)
         self.save_events()
 
-        # Annuncio immediato dell'inizio
-        embed = build_dynamic_embed(event)
-        channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
-
-        if channel is None:
-            print("ERRORE: Canale annunci non trovato.")
-            await interaction.response.send_message(
-                "❌ Errore: canale annunci non trovato.",
-                ephemeral=True
-            )
-            return
-
-        await channel.send(embed=embed)
-
         await interaction.response.send_message(
-            f"Evento dinamico **{nome}** aggiunto e annunciato.",
+            f"Evento dinamico **{nome}** aggiunto.",
             ephemeral=True
         )
 
-    # ---------------------------
-    # AUTOCOMPLETE PER INIZIO E FINE
-    # ---------------------------
-
+    # Autocomplete
     @add_event.autocomplete("inizio")
     async def autocomplete_inizio(self, interaction, current):
         return self.autocomplete_hint()
@@ -185,32 +188,28 @@ class DynamicEvents(commands.Cog):
         return self.autocomplete_hint()
 
     # ---------------------------
-    # ANNUNCIO FINE EVENTO (giorno prima alle 18:00)
+    # ANNUNCIO FINE EVENTO
     # ---------------------------
 
     @tasks.loop(minutes=1)
     async def check_end_announcements(self):
         now = datetime.now(ZoneInfo("Europe/Rome"))
         channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
-        if channel is None:
-            return
 
         changed = False
 
         for event in self.events:
-            if event.get("end_announced"):
+            if event["end_announced"]:
                 continue
 
-            end_dt = datetime.fromisoformat(event["end"]).replace(
-                tzinfo=ZoneInfo(event["timezone"])
-            )
-
+            end_dt = from_iso(event["end"], event["timezone"])
             announce_dt = end_dt - timedelta(days=1)
-            announce_dt = announce_dt.replace(hour=18, minute=0, second=0, microsecond=0)
+            announce_dt = announce_dt.replace(hour=18, minute=0, second=0)
 
             if now >= announce_dt:
-                embed = build_end_announcement(event)
-                await channel.send(embed=embed)
+                embed = build_end_embed(event)
+                msg = await channel.send(embed=embed)
+                event["end_message_id"] = msg.id
                 event["end_announced"] = True
                 changed = True
 
@@ -218,33 +217,47 @@ class DynamicEvents(commands.Cog):
             self.save_events()
 
     # ---------------------------
-    # CANCELLAZIONE AUTOMATICA
+    # AGGIORNAMENTO COUNTDOWN
+    # ---------------------------
+
+    @tasks.loop(seconds=30)
+    async def update_countdowns(self):
+        now = datetime.now(ZoneInfo("Europe/Rome"))
+        channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
+
+        for event in self.events:
+            # Aggiorna embed inizio
+            msg_id = event.get("start_message_id")
+            if msg_id:
+                msg = await channel.fetch_message(msg_id)
+                embed = build_start_embed(event)
+                await msg.edit(embed=embed)
+
+            # Aggiorna embed fine (se già annunciato)
+            end_msg_id = event.get("end_message_id")
+            if end_msg_id:
+                msg = await channel.fetch_message(end_msg_id)
+                embed = build_end_embed(event)
+                await msg.edit(embed=embed)
+
+    # ---------------------------
+    # CLEANUP
     # ---------------------------
 
     @tasks.loop(minutes=5)
     async def cleanup_events(self):
         now = datetime.now(ZoneInfo("Europe/Rome"))
-        changed = False
-
         new_list = []
-        for event in self.events:
-            try:
-                end_dt = datetime.fromisoformat(event["end"]).replace(
-                    tzinfo=ZoneInfo(event.get("timezone", "Europe/Rome"))
-                )
-            except Exception:
-                changed = True
-                continue
 
+        for event in self.events:
+            end_dt = from_iso(event["end"], event["timezone"])
             if now < end_dt:
                 new_list.append(event)
-            else:
-                changed = True
 
-        if changed:
+        if len(new_list) != len(self.events):
             self.events = new_list
             self.save_events()
-            print("Eventi dinamici scaduti o invalidi rimossi.")
+            print("Eventi dinamici scaduti rimossi.")
 
     @cleanup_events.before_loop
     async def before_cleanup(self):
