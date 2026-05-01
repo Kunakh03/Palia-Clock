@@ -2,8 +2,8 @@
   {
     "name": "Mercato Maji",
     "emoji": "🪄",
-    "start": "2026-05-05T09:00:00",
-    "end": "2026-05-12T09:00:00",
+    "start": "2026-04-28T00:00:00",
+    "end": "2026-05-05T00:00:00",
     "timezone": "America/Los_Angeles",
     "announce_1h_before_start": true,
     "announce_1h_before_end": true,
@@ -12,31 +12,31 @@
   {
     "name": "Mercato Maji",
     "emoji": "🪄",
-    "start": "2026-06-02T09:00:00",
-    "end": "2026-06-09T09:00:00",
+    "start": "2026-05-19T00:00:00",
+    "end": "2026-05-26T00:00:00",
     "timezone": "America/Los_Angeles",
     "announce_1h_before_start": true,
     "announce_1h_before_end": true,
     "color": "#8A2BE2"
   },
   {
-    "name": "Spiritfest",
-    "emoji": "🕯️",
-    "start": "2026-10-10T09:00:00",
-    "end": "2026-10-24T09:00:00",
+    "name": "Mercato Maji",
+    "emoji": "🪄",
+    "start": "2026-06-09T00:00:00",
+    "end": "2026-06-16T00:00:00",
     "timezone": "America/Los_Angeles",
     "announce_1h_before_start": true,
     "announce_1h_before_end": true,
-    "color": "#FF7F50"
+    "color": "#8A2BE2"
   },
   {
-    "name": "Fantasia d'Autunno",
-    "emoji": "🍂",
-    "start": "2026-11-05T09:00:00",
-    "end": "2026-11-19T09:00:00",
+    "name": "Mercato Maji",
+    "emoji": "🪄",
+    "start": "2026-06-30T00:00:00",
+    "end": "2026-07-07T00:00:00",
     "timezone": "America/Los_Angeles",
     "announce_1h_before_start": true,
     "announce_1h_before_end": true,
-    "color": "#CD7F32"
+    "color": "#8A2BE2"
   }
 ]
