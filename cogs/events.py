@@ -9,6 +9,7 @@ REMOTE_EVENTS_URL = "https://raw.githubusercontent.com/Kunakh03/Palia-Clock/main
 LOCAL_EVENTS_FILE = "events.json"
 
 ANNOUNCE_CHANNEL_ID = 1483229095738212533  # canale annunci
+MENTION_ROLE_ID = 1393698659421655196      # Ruolo Paliani
 
 
 # ---------------------------------------------------
@@ -19,22 +20,66 @@ def build_recurring_embed(event: dict, start_ts: int, start_rome: datetime):
     emoji_start = event.get("emoji", "")
     emoji_end = event.get("emoji_end", "")
 
-    title = f"{emoji_start} {event['name']} {emoji_end}".strip()
+    # Titolo ingrandito con markdown
+    title = f"# {emoji_start} {event['name']} {emoji_end}".strip()
 
     ora = start_rome.strftime("%H:%M")
 
-    description = (
-        f"L'evento inizierà alle {ora}!\n"
-        f"**Countdown:** <t:{start_ts}:R>"
-    )
-
     embed = discord.Embed(
-        title=title,
-        description=description,
+        description="",
         color=int(event.get("color", "0x5865F2").replace("#", "0x"), 16)
     )
 
-    embed.set_footer(text="Palia Clock • Evento")
+    # Titolo + menzione
+    embed.add_field(
+        name=title,
+        value=f"<@&{MENTION_ROLE_ID}>",
+        inline=False
+    )
+
+    # Corpo
+    embed.add_field(
+        name="",
+        value=(
+            f"L'evento inizierà alle {ora}!\n"
+            f"**Countdown:** <t:{start_ts}:R>"
+        ),
+        inline=False
+    )
+
+    embed.set_footer(text="Evento ricorrente")
+    return embed
+
+
+def build_recurring_end_embed(event: dict, end_ts: int, end_rome: datetime):
+    emoji_start = event.get("emoji", "")
+    emoji_end = event.get("emoji_end", "")
+
+    title = f"# Fine evento: {emoji_start} {event['name']} {emoji_end}".strip()
+
+    ora = end_rome.strftime("%H:%M")
+
+    embed = discord.Embed(
+        description="",
+        color=0xe67e22
+    )
+
+    embed.add_field(
+        name=title,
+        value=f"<@&{MENTION_ROLE_ID}>",
+        inline=False
+    )
+
+    embed.add_field(
+        name="",
+        value=(
+            f"L'evento terminerà alle {ora}!\n"
+            f"**Countdown:** <t:{end_ts}:R>"
+        ),
+        inline=False
+    )
+
+    embed.set_footer(text="Evento ricorrente")
     return embed
 
 
@@ -70,7 +115,6 @@ class Events(commands.Cog):
                         print(f"Errore JSON remoto: {resp.status}")
                         return None
 
-                    # Leggiamo SEMPRE come testo e poi JSON
                     text = await resp.text()
 
                     try:
@@ -121,7 +165,6 @@ class Events(commands.Cog):
             name = event["name"]
             tz = ZoneInfo(event["timezone"])
 
-            # --- VALIDAZIONE DATE ---
             try:
                 start = datetime.fromisoformat(event["start"]).replace(tzinfo=tz)
                 end = datetime.fromisoformat(event["end"]).replace(tzinfo=tz)
@@ -141,30 +184,27 @@ class Events(commands.Cog):
             start_ts = int(start.timestamp())
             end_ts = int(end.timestamp())
 
-            # Annuncio 1h prima dell'inizio
-            if event["announce_1h_before_start"]:
-                if not self.state[name]["start"] and now_rome >= (start_rome - timedelta(hours=1)):
-                    embed = build_recurring_embed(event, start_ts, start_rome)
-                    await channel.send(embed=embed)
-                    self.state[name]["start"] = True
-                    self.save_state()
+            # ---------------------------
+            # ANNUNCIO INIZIO - giorno prima alle 18:00
+            # ---------------------------
+            announce_start_dt = (start_rome - timedelta(days=1)).replace(hour=18, minute=0, second=0)
 
-            # Annuncio 1h prima della fine
-            if event["announce_1h_before_end"]:
-                if not self.state[name]["end"] and now_rome >= (end_rome - timedelta(hours=1)):
-                    ora_fine = end_rome.strftime("%H:%M")
-                    embed = discord.Embed(
-                        title=f"{event.get('emoji', '')} {name}",
-                        description=(
-                            f"L'evento terminerà alle {ora_fine}!\n"
-                            f"**Countdown:** <t:{end_ts}:R>"
-                        ),
-                        color=0xe67e22
-                    )
-                    embed.set_footer(text="Palia Clock • Evento")
-                    await channel.send(embed=embed)
-                    self.state[name]["end"] = True
-                    self.save_state()
+            if not self.state[name]["start"] and now_rome >= announce_start_dt:
+                embed = build_recurring_embed(event, start_ts, start_rome)
+                await channel.send(embed=embed)
+                self.state[name]["start"] = True
+                self.save_state()
+
+            # ---------------------------
+            # ANNUNCIO FINE - giorno prima alle 18:00
+            # ---------------------------
+            announce_end_dt = (end_rome - timedelta(days=1)).replace(hour=18, minute=0, second=0)
+
+            if not self.state[name]["end"] and now_rome >= announce_end_dt:
+                embed = build_recurring_end_embed(event, end_ts, end_rome)
+                await channel.send(embed=embed)
+                self.state[name]["end"] = True
+                self.save_state()
 
     # ---------------------------
     # SETUP
