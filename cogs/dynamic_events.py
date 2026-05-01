@@ -6,7 +6,8 @@ from zoneinfo import ZoneInfo
 import json
 
 DYNAMIC_EVENTS_FILE = "dynamic_events.json"
-ANNOUNCE_CHANNEL_ID = 1416482590596141248  # canale annunci
+ANNOUNCE_CHANNEL_ID = 1416482590596141248
+MENTION_ROLE_ID = 1393698659421655196  # Ruolo Paliani
 
 
 # ---------------------------------------------------
@@ -14,7 +15,6 @@ ANNOUNCE_CHANNEL_ID = 1416482590596141248  # canale annunci
 # ---------------------------------------------------
 
 def parse_datetime(value: str):
-    """Converte GG-MM-AAAA HH:MM → datetime"""
     return datetime.strptime(value, "%d-%m-%Y %H:%M")
 
 
@@ -38,16 +38,28 @@ def build_start_embed(event: dict):
     countdown = "00:00" if now >= start_dt else f"<t:{start_ts}:R>"
 
     embed = discord.Embed(
-        title=event["name"],
-        description=(
+        description="",  # titolo gestito come field
+        color=int(event.get("color", "#FFD700").replace("#", "0x"), 16)
+    )
+
+    # Titolo ingrandito con markdown
+    embed.add_field(
+        name=f"# {event['name']}",
+        value=f"<@&{MENTION_ROLE_ID}>",
+        inline=False
+    )
+
+    embed.add_field(
+        name="",
+        value=(
             f"{event['description']}\n\n"
             f"**Inizio:** <t:{start_ts}:t>\n"
             f"**Countdown:** {countdown}"
         ),
-        color=int(event.get("color", "#FFD700").replace("#", "0x"), 16)
+        inline=False
     )
 
-    embed.set_footer(text="Palia Clock • Evento dinamico")
+    embed.set_footer(text="Evento dinamico")
     return embed
 
 
@@ -59,15 +71,26 @@ def build_end_embed(event: dict):
     countdown = "00:00" if now >= end_dt else f"<t:{end_ts}:R>"
 
     embed = discord.Embed(
-        title=f"📌 Fine evento: {event['name']}",
-        description=(
-            f"L'evento terminerà alle <t:{end_ts}:t>!\n"
-            f"**Countdown:** {countdown}"
-        ),
+        description="",
         color=0xe67e22
     )
 
-    embed.set_footer(text="Palia Clock • Evento dinamico")
+    embed.add_field(
+        name=f"# Fine evento: {event['name']}",
+        value=f"<@&{MENTION_ROLE_ID}>",
+        inline=False
+    )
+
+    embed.add_field(
+        name="",
+        value=(
+            f"L'evento terminerà alle <t:{end_ts}:t>!\n"
+            f"**Countdown:** {countdown}"
+        ),
+        inline=False
+    )
+
+    embed.set_footer(text="Evento dinamico")
     return embed
 
 
@@ -118,7 +141,6 @@ class DynamicEvents(commands.Cog):
         inizio: str,
         fine: str
     ):
-        # Validazione inizio
         try:
             dt_start = parse_datetime(inizio)
         except:
@@ -128,7 +150,6 @@ class DynamicEvents(commands.Cog):
             )
             return
 
-        # Validazione fine
         try:
             dt_end = parse_datetime(fine)
         except:
@@ -150,11 +171,14 @@ class DynamicEvents(commands.Cog):
             "end_message_id": None
         }
 
-        # Annuncio immediato
         channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
+
         embed = build_start_embed(event)
         msg = await channel.send(embed=embed)
         event["start_message_id"] = msg.id
+
+        # PATCH: aggiorna subito il countdown
+        await msg.edit(embed=build_start_embed(event))
 
         self.events.append(event)
         self.save_events()
@@ -214,13 +238,11 @@ class DynamicEvents(commands.Cog):
         channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
 
         for event in self.events:
-            # Aggiorna embed inizio
             msg_id = event.get("start_message_id")
             if msg_id:
                 msg = await channel.fetch_message(msg_id)
                 await msg.edit(embed=build_start_embed(event))
 
-            # Aggiorna embed fine
             end_msg_id = event.get("end_message_id")
             if end_msg_id:
                 msg = await channel.fetch_message(end_msg_id)
