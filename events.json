@@ -38,5 +38,25 @@
     "announce_1h_before_start": true,
     "announce_1h_before_end": true,
     "color": "#8A2BE2"
+  },
+  {
+    "name": "Festival d'Autunno",
+    "emoji": "🕯️",
+    "start": "2026-10-10T00:00:00",
+    "end": "2026-10-24T00:00:00",
+    "timezone": "America/Los_Angeles",
+    "announce_1h_before_start": true,
+    "announce_1h_before_end": true,
+    "color": "#FF7F50"
+  },
+  {
+    "name": "Capodanno Lunare",
+    "emoji": "🐉",
+    "start": "2027-01-26T00:00:00",
+    "end": "2027-02-16T00:00:00",
+    "timezone": "America/Los_Angeles",
+    "announce_1h_before_start": true,
+    "announce_1h_before_end": true,
+    "color": "#FF0000"
   }
 ]
