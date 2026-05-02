@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands, tasks
+from discord import app_commands
 from zoneinfo import ZoneInfo
 import json
 import aiohttp
@@ -8,21 +9,17 @@ from datetime import datetime, timedelta
 REMOTE_EVENTS_URL = "https://raw.githubusercontent.com/Kunakh03/Palia-Clock/main/events.json"
 LOCAL_EVENTS_FILE = "events.json"
 
-ANNOUNCE_CHANNEL_ID = 1483229095738212533  # canale annunci
-MENTION_ROLE_ID = 1393698659421655196      # Ruolo Paliani
+ANNOUNCE_CHANNEL_ID = 1483229095738212533
+MENTION_ROLE_ID = 1393698659421655196
 
 
 # ---------------------------------------------------
-# EMBED PER EVENTI RICORRENTI
+# EMBED PER EVENTI STATICI
 # ---------------------------------------------------
 
-def build_recurring_embed(event: dict, start_ts: int, start_rome: datetime):
-    emoji_start = event.get("emoji", "")
-    emoji_end = event.get("emoji_end", "")
-
-    # Titolo ingrandito con markdown
-    title = f"# {emoji_start} {event['name']} {emoji_end}".strip()
-
+def build_static_start_embed(event: dict, start_ts: int, start_rome: datetime):
+    emoji = event.get("emoji", "")
+    title = f"# {emoji} {event['name']}".strip()
     ora = start_rome.strftime("%H:%M")
 
     embed = discord.Embed(
@@ -30,14 +27,12 @@ def build_recurring_embed(event: dict, start_ts: int, start_rome: datetime):
         color=int(event.get("color", "0x5865F2").replace("#", "0x"), 16)
     )
 
-    # Titolo + menzione
     embed.add_field(
         name=title,
         value=f"<@&{MENTION_ROLE_ID}>",
         inline=False
     )
 
-    # Corpo
     embed.add_field(
         name="",
         value=(
@@ -47,16 +42,13 @@ def build_recurring_embed(event: dict, start_ts: int, start_rome: datetime):
         inline=False
     )
 
-    embed.set_footer(text="Evento ricorrente")
+    embed.set_footer(text="Evento statico")
     return embed
 
 
-def build_recurring_end_embed(event: dict, end_ts: int, end_rome: datetime):
-    emoji_start = event.get("emoji", "")
-    emoji_end = event.get("emoji_end", "")
-
-    title = f"# Fine evento: {emoji_start} {event['name']} {emoji_end}".strip()
-
+def build_static_end_embed(event: dict, end_ts: int, end_rome: datetime):
+    emoji = event.get("emoji", "")
+    title = f"# Fine evento: {emoji} {event['name']}".strip()
     ora = end_rome.strftime("%H:%M")
 
     embed = discord.Embed(
@@ -79,12 +71,12 @@ def build_recurring_end_embed(event: dict, end_ts: int, end_rome: datetime):
         inline=False
     )
 
-    embed.set_footer(text="Evento ricorrente")
+    embed.set_footer(text="Evento statico")
     return embed
 
 
 # ---------------------------------------------------
-# COG EVENTI FISSI
+# COG EVENTI STATICI
 # ---------------------------------------------------
 
 class Events(commands.Cog):
@@ -116,7 +108,6 @@ class Events(commands.Cog):
                         return None
 
                     text = await resp.text()
-
                     try:
                         return json.loads(text)
                     except json.JSONDecodeError:
@@ -150,6 +141,30 @@ class Events(commands.Cog):
             json.dump(self.state, f, indent=2)
 
     # ---------------------------
+    # RESET AUTOMATICO EVENTI FINITI
+    # ---------------------------
+
+    def reset_if_finished(self, event_name: str, now_rome: datetime):
+        """Reset automatico dello stato quando un evento è finito."""
+        future_events = [
+            e for e in self.events
+            if e["name"] == event_name and
+            datetime.fromisoformat(e["end"]).replace(
+                tzinfo=ZoneInfo(e["timezone"])
+            ).astimezone(ZoneInfo("Europe/Rome")) > now_rome
+        ]
+
+        if future_events:
+            # Esiste una nuova iterazione futura → resetta
+            self.state[event_name] = {"start": False, "end": False}
+        else:
+            # Nessuna iterazione futura → rimuovi
+            if event_name in self.state:
+                del self.state[event_name]
+
+        self.save_state()
+
+    # ---------------------------
     # CHECK EVENTI
     # ---------------------------
 
@@ -175,7 +190,9 @@ class Events(commands.Cog):
             start_rome = start.astimezone(ZoneInfo("Europe/Rome"))
             end_rome = end.astimezone(ZoneInfo("Europe/Rome"))
 
+            # Evento finito → reset automatico
             if now_rome > end_rome:
+                self.reset_if_finished(name, now_rome)
                 continue
 
             if name not in self.state:
@@ -184,27 +201,85 @@ class Events(commands.Cog):
             start_ts = int(start.timestamp())
             end_ts = int(end.timestamp())
 
-            # ---------------------------
-            # ANNUNCIO INIZIO - giorno prima alle 18:00
-            # ---------------------------
+            # Annuncio inizio (giorno prima alle 18:00)
             announce_start_dt = (start_rome - timedelta(days=1)).replace(hour=18, minute=0, second=0)
-
             if not self.state[name]["start"] and now_rome >= announce_start_dt:
-                embed = build_recurring_embed(event, start_ts, start_rome)
+                embed = build_static_start_embed(event, start_ts, start_rome)
                 await channel.send(embed=embed)
                 self.state[name]["start"] = True
                 self.save_state()
 
-            # ---------------------------
-            # ANNUNCIO FINE - giorno prima alle 18:00
-            # ---------------------------
+            # Annuncio fine (giorno prima alle 18:00)
             announce_end_dt = (end_rome - timedelta(days=1)).replace(hour=18, minute=0, second=0)
-
             if not self.state[name]["end"] and now_rome >= announce_end_dt:
-                embed = build_recurring_end_embed(event, end_ts, end_rome)
+                embed = build_static_end_embed(event, end_ts, end_rome)
                 await channel.send(embed=embed)
                 self.state[name]["end"] = True
                 self.save_state()
+
+    # ---------------------------
+    # COMANDO /testevents
+    # ---------------------------
+
+    @app_commands.command(name="testevents", description="Testa un evento statico (inizio o fine).")
+    @app_commands.describe(evento="Seleziona l'evento", tipo="Inizio o fine")
+    async def testevents(self, interaction: discord.Interaction, evento: str, tipo: str):
+
+        # Trova l'evento selezionato
+        selected = [e for e in self.events if e["name"] == evento]
+        if not selected:
+            return await interaction.response.send_message("Evento non trovato.", ephemeral=True)
+
+        event = selected[0]
+
+        tz = ZoneInfo(event["timezone"])
+        start = datetime.fromisoformat(event["start"]).replace(tzinfo=tz)
+        end = datetime.fromisoformat(event["end"]).replace(tzinfo=tz)
+
+        start_rome = start.astimezone(ZoneInfo("Europe/Rome"))
+        end_rome = end.astimezone(ZoneInfo("Europe/Rome"))
+
+        start_ts = int(start.timestamp())
+        end_ts = int(end.timestamp())
+
+        if tipo == "inizio":
+            embed = build_static_start_embed(event, start_ts, start_rome)
+        else:
+            embed = build_static_end_embed(event, end_ts, end_rome)
+
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    # ---------------------------
+    # AUTOCOMPLETE
+    # ---------------------------
+
+    @testevents.autocomplete("evento")
+    async def evento_autocomplete(self, interaction: discord.Interaction, current: str):
+        # Ordina cronologicamente
+        ordered = sorted(self.events, key=lambda e: e["start"])
+
+        # Rimuovi duplicati mantenendo l'ordine
+        seen = set()
+        unique = []
+        for e in ordered:
+            if e["name"] not in seen:
+                seen.add(e["name"])
+                unique.append(e["name"])
+
+        return [
+            app_commands.Choice(name=name, value=name)
+            for name in unique
+            if current.lower() in name.lower()
+        ]
+
+    @testevents.autocomplete("tipo")
+    async def tipo_autocomplete(self, interaction: discord.Interaction, current: str):
+        options = ["inizio", "fine"]
+        return [
+            app_commands.Choice(name=o, value=o)
+            for o in options
+            if current.lower() in o.lower()
+        ]
 
     # ---------------------------
     # SETUP
