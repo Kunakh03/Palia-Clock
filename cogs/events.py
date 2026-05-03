@@ -12,18 +12,31 @@ LOCAL_EVENTS_FILE = "events.json"
 ANNOUNCE_CHANNEL_ID = 1483229095738212533
 MENTION_ROLE_ID = 1393698659421655196
 
-# Emoji personalizzate Maji
-EMOJI_ARGENTO = "<:GhirlandaArgento:1499887346253037778>"
-EMOJI_ORO = "<:GhirlandaOro:1499887262404706546>"
+# Emoji personalizzate
+EMOJI_MAJI_START = "<:Dragon:1499063330256457728>"
+EMOJI_MAJI_END = "<:Phoenix:1499063237860266076>"
+
+EMOJI_WINTER_START = "<:GhirlandaArgento:1499887346253037778>"
+EMOJI_WINTER_END = "<:GhirlandaOro:1499887262404706546>"
 
 
 # ---------------------------------------------------
 # EMBED PER EVENTI STATICI
 # ---------------------------------------------------
 
+def get_event_emojis(event_name: str, event: dict):
+    """Restituisce le emoji corrette in base al nome dell'evento."""
+    if event_name == "Mercato Maji":
+        return EMOJI_MAJI_START, EMOJI_MAJI_END
+    if event_name == "Festival delle Luci d’Inverno":
+        return EMOJI_WINTER_START, EMOJI_WINTER_END
+
+    # fallback: emoji generiche dal JSON
+    return event.get("emoji", ""), event.get("emoji_end", "")
+
+
 def build_static_start_embed(event: dict, start_ts: int, start_rome: datetime):
-    emoji_start = EMOJI_ARGENTO if event["name"] == "Mercato Maji" else event.get("emoji", "")
-    emoji_end = EMOJI_ORO if event["name"] == "Mercato Maji" else event.get("emoji_end", "")
+    emoji_start, emoji_end = get_event_emojis(event["name"], event)
 
     embed = discord.Embed(
         title=f"{emoji_start} {event['name']} {emoji_end}".strip(),
@@ -33,12 +46,7 @@ def build_static_start_embed(event: dict, start_ts: int, start_rome: datetime):
 
     ora = start_rome.strftime("%H:%M")
 
-    embed.add_field(
-        name="",
-        value=f"<@&{MENTION_ROLE_ID}>",
-        inline=False
-    )
-
+    embed.add_field(name="", value=f"<@&{MENTION_ROLE_ID}>", inline=False)
     embed.add_field(
         name="",
         value=f"L'evento inizierà alle {ora}!\n**Countdown:** <t:{start_ts}:R>",
@@ -50,23 +58,17 @@ def build_static_start_embed(event: dict, start_ts: int, start_rome: datetime):
 
 
 def build_static_end_embed(event: dict, end_ts: int, end_rome: datetime):
-    emoji_start = EMOJI_ARGENTO if event["name"] == "Mercato Maji" else event.get("emoji", "")
-    emoji_end = EMOJI_ORO if event["name"] == "Mercato Maji" else event.get("emoji_end", "")
+    emoji_start, emoji_end = get_event_emojis(event["name"], event)
 
     embed = discord.Embed(
         title=f"Fine evento: {emoji_start} {event['name']} {emoji_end}".strip(),
         description="",
-        color=int(event.get("color", "0x5865F2").replace("#", "0x"), 16)  # stesso colore dell'evento
+        color=int(event.get("color", "0x5865F2").replace("#", "0x"), 16)  # stesso colore
     )
 
     ora = end_rome.strftime("%H:%M")
 
-    embed.add_field(
-        name="",
-        value=f"<@&{MENTION_ROLE_ID}>",
-        inline=False
-    )
-
+    embed.add_field(name="", value=f"<@&{MENTION_ROLE_ID}>", inline=False)
     embed.add_field(
         name="",
         value=f"L'evento terminerà alle {ora}!\n**Countdown:** <t:{end_ts}:R>",
