@@ -1,7 +1,8 @@
 [
   {
     "name": "Mercato Maji",
-    "emoji": "🪄",
+    "emoji": "<:Dragon:1499063330256457728>",
+    "emoji_end": "<:Phoenix:1499063237860266076>",
     "start": "2026-04-28T00:00:00",
     "end": "2026-05-05T00:00:00",
     "timezone": "America/Los_Angeles",
@@ -11,7 +12,8 @@
   },
   {
     "name": "Mercato Maji",
-    "emoji": "🪄",
+    "emoji": "<:Dragon:1499063330256457728>",
+    "emoji_end": "<:Phoenix:1499063237860266076>",
     "start": "2026-05-19T00:00:00",
     "end": "2026-05-26T00:00:00",
     "timezone": "America/Los_Angeles",
@@ -21,7 +23,8 @@
   },
   {
     "name": "Mercato Maji",
-    "emoji": "🪄",
+    "emoji": "<:Dragon:1499063330256457728>",
+    "emoji_end": "<:Phoenix:1499063237860266076>",
     "start": "2026-06-09T00:00:00",
     "end": "2026-06-16T00:00:00",
     "timezone": "America/Los_Angeles",
@@ -31,7 +34,8 @@
   },
   {
     "name": "Mercato Maji",
-    "emoji": "🪄",
+    "emoji": "<:Dragon:1499063330256457728>",
+    "emoji_end": "<:Phoenix:1499063237860266076>",
     "start": "2026-06-30T00:00:00",
     "end": "2026-07-07T00:00:00",
     "timezone": "America/Los_Angeles",
@@ -48,6 +52,17 @@
     "announce_1h_before_start": true,
     "announce_1h_before_end": true,
     "color": "#FF7F50"
+  },
+  {
+    "name": "Festival delle Luci d’Inverno",
+    "emoji": "<:GhirlandaArgento:1499887346253037778>",
+    "emoji_end": "<:GhirlandaOro:1499887262404706546>",
+    "start": "2026-12-15T00:00:00",
+    "end": "2027-01-05T00:00:00",
+    "timezone": "America/Los_Angeles",
+    "announce_1h_before_start": true,
+    "announce_1h_before_end": true,
+    "color": "#00BFFF"
   },
   {
     "name": "Capodanno Lunare",
