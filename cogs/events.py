@@ -12,33 +12,36 @@ LOCAL_EVENTS_FILE = "events.json"
 ANNOUNCE_CHANNEL_ID = 1483229095738212533
 MENTION_ROLE_ID = 1393698659421655196
 
+# Emoji personalizzate Maji
+EMOJI_ARGENTO = "<:GhirlandaArgento:1499887346253037778>"
+EMOJI_ORO = "<:GhirlandaOro:1499887262404706546>"
+
 
 # ---------------------------------------------------
 # EMBED PER EVENTI STATICI
 # ---------------------------------------------------
 
 def build_static_start_embed(event: dict, start_ts: int, start_rome: datetime):
-    emoji = event.get("emoji", "")
-    title = f"# {emoji} {event['name']}".strip()
-    ora = start_rome.strftime("%H:%M")
+    emoji_start = EMOJI_ARGENTO if event["name"] == "Mercato Maji" else event.get("emoji", "")
+    emoji_end = EMOJI_ORO if event["name"] == "Mercato Maji" else event.get("emoji_end", "")
 
     embed = discord.Embed(
+        title=f"{emoji_start} {event['name']} {emoji_end}".strip(),
         description="",
         color=int(event.get("color", "0x5865F2").replace("#", "0x"), 16)
     )
 
+    ora = start_rome.strftime("%H:%M")
+
     embed.add_field(
-        name=title,
+        name="",
         value=f"<@&{MENTION_ROLE_ID}>",
         inline=False
     )
 
     embed.add_field(
         name="",
-        value=(
-            f"L'evento inizierà alle {ora}!\n"
-            f"**Countdown:** <t:{start_ts}:R>"
-        ),
+        value=f"L'evento inizierà alle {ora}!\n**Countdown:** <t:{start_ts}:R>",
         inline=False
     )
 
@@ -47,27 +50,26 @@ def build_static_start_embed(event: dict, start_ts: int, start_rome: datetime):
 
 
 def build_static_end_embed(event: dict, end_ts: int, end_rome: datetime):
-    emoji = event.get("emoji", "")
-    title = f"# Fine evento: {emoji} {event['name']}".strip()
-    ora = end_rome.strftime("%H:%M")
+    emoji_start = EMOJI_ARGENTO if event["name"] == "Mercato Maji" else event.get("emoji", "")
+    emoji_end = EMOJI_ORO if event["name"] == "Mercato Maji" else event.get("emoji_end", "")
 
     embed = discord.Embed(
+        title=f"Fine evento: {emoji_start} {event['name']} {emoji_end}".strip(),
         description="",
-        color=0xe67e22
+        color=int(event.get("color", "0x5865F2").replace("#", "0x"), 16)  # stesso colore dell'evento
     )
 
+    ora = end_rome.strftime("%H:%M")
+
     embed.add_field(
-        name=title,
+        name="",
         value=f"<@&{MENTION_ROLE_ID}>",
         inline=False
     )
 
     embed.add_field(
         name="",
-        value=(
-            f"L'evento terminerà alle {ora}!\n"
-            f"**Countdown:** <t:{end_ts}:R>"
-        ),
+        value=f"L'evento terminerà alle {ora}!\n**Countdown:** <t:{end_ts}:R>",
         inline=False
     )
 
@@ -145,7 +147,6 @@ class Events(commands.Cog):
     # ---------------------------
 
     def reset_if_finished(self, event_name: str, now_rome: datetime):
-        """Reset automatico dello stato quando un evento è finito."""
         future_events = [
             e for e in self.events
             if e["name"] == event_name and
@@ -155,10 +156,8 @@ class Events(commands.Cog):
         ]
 
         if future_events:
-            # Esiste una nuova iterazione futura → resetta
             self.state[event_name] = {"start": False, "end": False}
         else:
-            # Nessuna iterazione futura → rimuovi
             if event_name in self.state:
                 del self.state[event_name]
 
@@ -190,7 +189,6 @@ class Events(commands.Cog):
             start_rome = start.astimezone(ZoneInfo("Europe/Rome"))
             end_rome = end.astimezone(ZoneInfo("Europe/Rome"))
 
-            # Evento finito → reset automatico
             if now_rome > end_rome:
                 self.reset_if_finished(name, now_rome)
                 continue
@@ -201,7 +199,6 @@ class Events(commands.Cog):
             start_ts = int(start.timestamp())
             end_ts = int(end.timestamp())
 
-            # Annuncio inizio (giorno prima alle 18:00)
             announce_start_dt = (start_rome - timedelta(days=1)).replace(hour=18, minute=0, second=0)
             if not self.state[name]["start"] and now_rome >= announce_start_dt:
                 embed = build_static_start_embed(event, start_ts, start_rome)
@@ -209,7 +206,6 @@ class Events(commands.Cog):
                 self.state[name]["start"] = True
                 self.save_state()
 
-            # Annuncio fine (giorno prima alle 18:00)
             announce_end_dt = (end_rome - timedelta(days=1)).replace(hour=18, minute=0, second=0)
             if not self.state[name]["end"] and now_rome >= announce_end_dt:
                 embed = build_static_end_embed(event, end_ts, end_rome)
@@ -225,7 +221,6 @@ class Events(commands.Cog):
     @app_commands.describe(evento="Seleziona l'evento", tipo="Inizio o fine")
     async def testevents(self, interaction: discord.Interaction, evento: str, tipo: str):
 
-        # Trova l'evento selezionato
         selected = [e for e in self.events if e["name"] == evento]
         if not selected:
             return await interaction.response.send_message("Evento non trovato.", ephemeral=True)
@@ -255,10 +250,8 @@ class Events(commands.Cog):
 
     @testevents.autocomplete("evento")
     async def evento_autocomplete(self, interaction: discord.Interaction, current: str):
-        # Ordina cronologicamente
         ordered = sorted(self.events, key=lambda e: e["start"])
 
-        # Rimuovi duplicati mantenendo l'ordine
         seen = set()
         unique = []
         for e in ordered:
