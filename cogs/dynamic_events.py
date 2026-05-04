@@ -115,9 +115,6 @@ class DynamicEvents(commands.Cog):
         self.bot = bot
         self.events = []
         self.load_events()
-        self.cleanup_events.start()
-        self.check_end_announcements.start()
-        self.update_countdowns.start()
 
     # ---------------------------
     # CARICAMENTO / SALVATAGGIO
@@ -189,7 +186,6 @@ class DynamicEvents(commands.Cog):
         msg = await channel.send(embed=embed)
         event["start_message_id"] = msg.id
 
-        # Aggiorna subito il countdown
         await msg.edit(embed=build_start_embed(event))
 
         self.events.append(event)
@@ -201,7 +197,7 @@ class DynamicEvents(commands.Cog):
         )
 
     # ---------------------------
-    # ANNUNCIO FINE EVENTO
+    # LOOP: ANNUNCIO FINE
     # ---------------------------
 
     @tasks.loop(minutes=1)
@@ -229,8 +225,12 @@ class DynamicEvents(commands.Cog):
         if changed:
             self.save_events()
 
+    @check_end_announcements.before_loop
+    async def before_check_end(self):
+        await self.bot.wait_until_ready()
+
     # ---------------------------
-    # AGGIORNAMENTO COUNTDOWN
+    # LOOP: COUNTDOWN
     # ---------------------------
 
     @tasks.loop(seconds=30)
@@ -248,8 +248,12 @@ class DynamicEvents(commands.Cog):
                 msg = await channel.fetch_message(end_msg_id)
                 await msg.edit(embed=build_end_embed(event))
 
+    @update_countdowns.before_loop
+    async def before_update(self):
+        await self.bot.wait_until_ready()
+
     # ---------------------------
-    # CLEANUP
+    # LOOP: CLEANUP
     # ---------------------------
 
     @tasks.loop(minutes=5)
@@ -270,6 +274,21 @@ class DynamicEvents(commands.Cog):
     @cleanup_events.before_loop
     async def before_cleanup(self):
         await self.bot.wait_until_ready()
+
+    # ---------------------------
+    # AVVIO LOOP IN on_ready
+    # ---------------------------
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        if not self.check_end_announcements.is_running():
+            self.check_end_announcements.start()
+
+        if not self.update_countdowns.is_running():
+            self.update_countdowns.start()
+
+        if not self.cleanup_events.is_running():
+            self.cleanup_events.start()
 
 
 async def setup(bot):
