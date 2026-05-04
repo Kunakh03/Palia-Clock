@@ -2,18 +2,19 @@ import datetime
 import discord
 from discord.ext import commands, tasks
 import time
+import os
 
 # === OROLOGIO INTERNO DI PALIA ===
 
-internal_palia_seconds = None      # tempo interno reale
-last_update_real = None            # timestamp reale dell'ultimo aggiornamento
-palia_speed = 24.0                 # velocità interna (correggibile)
+internal_palia_seconds = None
+last_update_real = None
+palia_speed = 24.0
 
-# === TEMPO COSMETICO (solo visualizzazione) ===
+# === TEMPO COSMETICO ===
 
-last_visual_seconds = None         # ultimo tempo mostrato
-last_visual_real_time = None       # quando è stato mostrato
-VISUAL_RATIO = 2.0                 # 1 minuto Palia = 2 secondi reali (non usato dal COG ora)
+last_visual_seconds = None
+last_visual_real_time = None
+VISUAL_RATIO = 2.0
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -28,13 +29,25 @@ class MyBot(commands.Bot):
         )
 
     async def setup_hook(self):
+        # Caricamento COG
         await self.load_extension("cogs.paliatime")
         await self.load_extension("cogs.npc")
         await self.load_extension("cogs.events")
         await self.load_extension("cogs.dynamic_events")
 
+        # Sync comandi
         synced = await self.tree.sync()
         print("Comandi sincronizzati:", [cmd.name for cmd in synced])
+
+        # Inizializzazione orologio
+        initialize_palia_clock()
+
+        # Avvio loop
+        if not update_channel.is_running():
+            update_channel.start()
+
+        if not smooth_sync.is_running():
+            smooth_sync.start()
 
 
 bot = MyBot()
@@ -142,24 +155,7 @@ async def update_channel():
         print(f"Errore aggiornamento canale: {e}")
 
 
-# === ON_READY ===
-
-@bot.event
-async def on_ready():
-    print(f"Connesso come {bot.user}")
-    print("Guilds:", [(g.name, g.id) for g in bot.guilds])
-
-    initialize_palia_clock()
-
-    if not update_channel.is_running():
-        update_channel.start()
-
-    if not smooth_sync.is_running():
-        smooth_sync.start()
-
-
 # === AVVIO BOT ===
 
-import os
 TOKEN = os.getenv("DISCORD_TOKEN")
 bot.run(TOKEN)
