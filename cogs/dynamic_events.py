@@ -4,8 +4,11 @@ from discord import app_commands
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import json
+import os
 
 DYNAMIC_EVENTS_FILE = "dynamic_events.json"
+STATE_FILE = "events_state.json"
+
 ANNOUNCE_CHANNEL_ID = 1416482590596141248
 MENTION_ROLE_ID = 1393698659421655196  # Ruolo Paliani
 
@@ -45,7 +48,7 @@ def get_event_emojis(event_name: str, event: dict):
     return event.get("emoji", ""), event.get("emoji_end", "")
 
 
-def build_start_embed(event: dict):
+def build_start_embed(event: dict, recovered=False):
     start_dt = from_iso(event["start"], event["timezone"])
     start_ts = int(start_dt.timestamp())
 
@@ -72,11 +75,12 @@ def build_start_embed(event: dict):
         inline=False
     )
 
-    embed.set_footer(text="Evento dinamico")
+    footer = "Evento dinamico — Recuperato" if recovered else "Evento dinamico"
+    embed.set_footer(text=footer)
     return embed
 
 
-def build_end_embed(event: dict):
+def build_end_embed(event: dict, recovered=False):
     end_dt = from_iso(event["end"], event["timezone"])
     end_ts = int(end_dt.timestamp())
 
@@ -102,7 +106,8 @@ def build_end_embed(event: dict):
         inline=False
     )
 
-    embed.set_footer(text="Evento dinamico")
+    footer = "Evento dinamico — Recuperato" if recovered else "Evento dinamico"
+    embed.set_footer(text=footer)
     return embed
 
 
@@ -114,6 +119,7 @@ class DynamicEvents(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.events = []
+        self.state = self.load_state()
         self.load_events()
 
     # ---------------------------
@@ -133,6 +139,16 @@ class DynamicEvents(commands.Cog):
         with open(DYNAMIC_EVENTS_FILE, "w", encoding="utf-8") as f:
             json.dump(self.events, f, indent=2)
         print("[DynamicEvents] Eventi dinamici salvati su file.")
+
+    def load_state(self):
+        if not os.path.exists(STATE_FILE):
+            return {}
+        with open(STATE_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def save_state(self):
+        with open(STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(self.state, f, indent=4)
 
     # ---------------------------
     # COMANDO /addevents
@@ -200,6 +216,48 @@ class DynamicEvents(commands.Cog):
         )
 
     # ---------------------------
+    # LOOP: RECUPERO EVENTI PERSI
+    # ---------------------------
+
+    @tasks.loop(seconds=30)
+    async def recover_missed_events(self):
+        now = datetime.now(ZoneInfo("Europe/Rome"))
+        channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
+
+        changed = False
+
+        for event in self.events:
+            start_dt = from_iso(event["start"], event["timezone"])
+            end_dt = from_iso(event["end"], event["timezone"])
+
+            start_key = f"dynamic_{event['start_message_id']}_start"
+            end_key = f"dynamic_{event['end_message_id']}_end"
+
+            # Recupero START
+            if now > start_dt and not event["start_message_id"] and start_key not in self.state:
+                embed = build_start_embed(event, recovered=True)
+                msg = await channel.send(embed=embed)
+                event["start_message_id"] = msg.id
+                self.state[start_key] = True
+                changed = True
+
+            # Recupero END
+            if now > end_dt and not event["end_message_id"] and end_key not in self.state:
+                embed = build_end_embed(event, recovered=True)
+                msg = await channel.send(embed=embed)
+                event["end_message_id"] = msg.id
+                self.state[end_key] = True
+                changed = True
+
+        if changed:
+            self.save_events()
+            self.save_state()
+
+    @recover_missed_events.before_loop
+    async def before_recover(self):
+        await self.bot.wait_until_ready()
+
+    # ---------------------------
     # LOOP: ANNUNCIO FINE
     # ---------------------------
 
@@ -230,9 +288,7 @@ class DynamicEvents(commands.Cog):
 
     @check_end_announcements.before_loop
     async def before_check_end(self):
-        print("[DynamicEvents] check_end_announcements in attesa di bot.ready...")
         await self.bot.wait_until_ready()
-        print("[DynamicEvents] check_end_announcements pronto, loop partirà.")
 
     # ---------------------------
     # LOOP: COUNTDOWN
@@ -255,9 +311,7 @@ class DynamicEvents(commands.Cog):
 
     @update_countdowns.before_loop
     async def before_update(self):
-        print("[DynamicEvents] update_countdowns in attesa di bot.ready...")
         await self.bot.wait_until_ready()
-        print("[DynamicEvents] update_countdowns pronto, loop partirà.")
 
     # ---------------------------
     # LOOP: CLEANUP
@@ -276,13 +330,10 @@ class DynamicEvents(commands.Cog):
         if len(new_list) != len(self.events):
             self.events = new_list
             self.save_events()
-            print("[DynamicEvents] Eventi dinamici scaduti rimossi.")
 
     @cleanup_events.before_loop
     async def before_cleanup(self):
-        print("[DynamicEvents] cleanup_events in attesa di bot.ready...")
         await self.bot.wait_until_ready()
-        print("[DynamicEvents] cleanup_events pronto, loop partirà.")
 
     # ---------------------------
     # AVVIO LOOP IN on_ready
@@ -290,21 +341,18 @@ class DynamicEvents(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print("[DynamicEvents] on_ready ricevuto, controllo loop dinamici...")
+        if not self.recover_missed_events.is_running():
+            self.recover_missed_events.start()
 
         if not self.check_end_announcements.is_running():
             self.check_end_announcements.start()
-            print("[DynamicEvents] check_end_announcements started")
 
         if not self.update_countdowns.is_running():
             self.update_countdowns.start()
-            print("[DynamicEvents] update_countdowns started")
 
         if not self.cleanup_events.is_running():
             self.cleanup_events.start()
-            print("[DynamicEvents] cleanup_events started")
 
 
 async def setup(bot):
     await bot.add_cog(DynamicEvents(bot))
-    print("[DynamicEvents] Cog DynamicEvents caricato.")
