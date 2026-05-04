@@ -124,12 +124,15 @@ class DynamicEvents(commands.Cog):
         try:
             with open(DYNAMIC_EVENTS_FILE, "r", encoding="utf-8") as f:
                 self.events = json.load(f)
-        except:
+            print("[DynamicEvents] Eventi caricati dal file dinamico.")
+        except Exception as e:
+            print(f"[DynamicEvents] Nessun file eventi dinamici o errore nel caricamento: {e}")
             self.events = []
 
     def save_events(self):
         with open(DYNAMIC_EVENTS_FILE, "w", encoding="utf-8") as f:
             json.dump(self.events, f, indent=2)
+        print("[DynamicEvents] Eventi dinamici salvati su file.")
 
     # ---------------------------
     # COMANDO /addevents
@@ -152,7 +155,7 @@ class DynamicEvents(commands.Cog):
     ):
         try:
             dt_start = parse_datetime(inizio)
-        except:
+        except Exception:
             await interaction.response.send_message(
                 "❌ Formato INIZIO non valido. Usa **GG-MM-AAAA HH:MM**",
                 ephemeral=True
@@ -161,7 +164,7 @@ class DynamicEvents(commands.Cog):
 
         try:
             dt_end = parse_datetime(fine)
-        except:
+        except Exception:
             await interaction.response.send_message(
                 "❌ Formato FINE non valido. Usa **GG-MM-AAAA HH:MM**",
                 ephemeral=True
@@ -227,7 +230,9 @@ class DynamicEvents(commands.Cog):
 
     @check_end_announcements.before_loop
     async def before_check_end(self):
+        print("[DynamicEvents] check_end_announcements in attesa di bot.ready...")
         await self.bot.wait_until_ready()
+        print("[DynamicEvents] check_end_announcements pronto, loop partirà.")
 
     # ---------------------------
     # LOOP: COUNTDOWN
@@ -250,7 +255,9 @@ class DynamicEvents(commands.Cog):
 
     @update_countdowns.before_loop
     async def before_update(self):
+        print("[DynamicEvents] update_countdowns in attesa di bot.ready...")
         await self.bot.wait_until_ready()
+        print("[DynamicEvents] update_countdowns pronto, loop partirà.")
 
     # ---------------------------
     # LOOP: CLEANUP
@@ -269,11 +276,13 @@ class DynamicEvents(commands.Cog):
         if len(new_list) != len(self.events):
             self.events = new_list
             self.save_events()
-            print("Eventi dinamici scaduti rimossi.")
+            print("[DynamicEvents] Eventi dinamici scaduti rimossi.")
 
     @cleanup_events.before_loop
     async def before_cleanup(self):
+        print("[DynamicEvents] cleanup_events in attesa di bot.ready...")
         await self.bot.wait_until_ready()
+        print("[DynamicEvents] cleanup_events pronto, loop partirà.")
 
     # ---------------------------
     # AVVIO LOOP IN on_ready
@@ -281,15 +290,21 @@ class DynamicEvents(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
+        print("[DynamicEvents] on_ready ricevuto, controllo loop dinamici...")
+
         if not self.check_end_announcements.is_running():
             self.check_end_announcements.start()
+            print("[DynamicEvents] check_end_announcements started")
 
         if not self.update_countdowns.is_running():
             self.update_countdowns.start()
+            print("[DynamicEvents] update_countdowns started")
 
         if not self.cleanup_events.is_running():
             self.cleanup_events.start()
+            print("[DynamicEvents] cleanup_events started")
 
 
 async def setup(bot):
     await bot.add_cog(DynamicEvents(bot))
+    print("[DynamicEvents] Cog DynamicEvents caricato.")
