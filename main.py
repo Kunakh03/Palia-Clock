@@ -32,7 +32,7 @@ class MyBot(commands.Bot):
         # Caricamento COG
         await self.load_extension("cogs.paliatime")
         await self.load_extension("cogs.npc")
-        await self.load_extension("cogs.events")
+        await self.load_extension("cogs.static_events")   # <-- sostituito
         await self.load_extension("cogs.dynamic_events")
 
         # Sync comandi
