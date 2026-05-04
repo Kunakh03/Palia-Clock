@@ -141,10 +141,19 @@ class DynamicEvents(commands.Cog):
         print("[DynamicEvents] Eventi dinamici salvati su file.")
 
     def load_state(self):
-        if not os.path.exists(STATE_FILE):
-            return {}
-        with open(STATE_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+        if os.path.exists(STATE_FILE):
+            try:
+                with open(STATE_FILE, "r", encoding="utf-8") as f:
+                    state = json.load(f)
+            except Exception:
+                state = {}
+        else:
+            state = {}
+
+        if "dynamic" not in state:
+            state["dynamic"] = {}
+
+        return state
 
     def save_state(self):
         with open(STATE_FILE, "w", encoding="utf-8") as f:
@@ -224,32 +233,41 @@ class DynamicEvents(commands.Cog):
         now = datetime.now(ZoneInfo("Europe/Rome"))
         channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
 
-        changed = False
+        changed_events = False
+        dynamic_state = self.state.get("dynamic", {})
 
         for event in self.events:
             start_dt = from_iso(event["start"], event["timezone"])
             end_dt = from_iso(event["end"], event["timezone"])
 
-            start_key = f"dynamic_{event['start_message_id']}_start"
-            end_key = f"dynamic_{event['end_message_id']}_end"
+            event_id = id(event)
+            if str(event_id) not in dynamic_state:
+                dynamic_state[str(event_id)] = {
+                    "start_recovered": False,
+                    "end_recovered": False
+                }
+
+            entry = dynamic_state[str(event_id)]
 
             # Recupero START
-            if now > start_dt and not event["start_message_id"] and start_key not in self.state:
+            if now > start_dt and not event["start_message_id"] and not entry["start_recovered"]:
                 embed = build_start_embed(event, recovered=True)
                 msg = await channel.send(embed=embed)
                 event["start_message_id"] = msg.id
-                self.state[start_key] = True
-                changed = True
+                entry["start_recovered"] = True
+                changed_events = True
 
             # Recupero END
-            if now > end_dt and not event["end_message_id"] and end_key not in self.state:
+            if now > end_dt and not event["end_message_id"] and not entry["end_recovered"]:
                 embed = build_end_embed(event, recovered=True)
                 msg = await channel.send(embed=embed)
                 event["end_message_id"] = msg.id
-                self.state[end_key] = True
-                changed = True
+                entry["end_recovered"] = True
+                changed_events = True
 
-        if changed:
+        self.state["dynamic"] = dynamic_state
+
+        if changed_events:
             self.save_events()
             self.save_state()
 
