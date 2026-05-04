@@ -5,9 +5,11 @@ from zoneinfo import ZoneInfo
 import json
 import aiohttp
 from datetime import datetime, timedelta
+import os
 
-REMOTE_EVENTS_URL = "https://raw.githubusercontent.com/Kunakh03/Palia-Clock/main/events.json"
-LOCAL_EVENTS_FILE = "events.json"
+REMOTE_EVENTS_URL = "https://raw.githubusercontent.com/Kunakh03/Palia-Clock/main/static_events.json"
+LOCAL_EVENTS_FILE = "static_events.json"
+STATE_FILE = "events_state.json"
 
 ANNOUNCE_CHANNEL_ID = 1483229095738212533
 MENTION_ROLE_ID = 1393698659421655196
@@ -32,7 +34,7 @@ def get_event_emojis(event_name: str, event: dict):
     return event.get("emoji", ""), event.get("emoji_end", "")
 
 
-def build_static_start_embed(event: dict, start_ts: int, start_rome: datetime):
+def build_static_start_embed(event: dict, start_ts: int, start_rome: datetime, recovered: bool = False):
     emoji_start, emoji_end = get_event_emojis(event["name"], event)
 
     embed = discord.Embed(
@@ -51,11 +53,12 @@ def build_static_start_embed(event: dict, start_ts: int, start_rome: datetime):
         inline=False
     )
 
-    embed.set_footer(text="Evento statico")
+    footer = "Evento statico — Recuperato" if recovered else "Evento statico"
+    embed.set_footer(text=footer)
     return embed
 
 
-def build_static_end_embed(event: dict, end_ts: int, end_rome: datetime):
+def build_static_end_embed(event: dict, end_ts: int, end_rome: datetime, recovered: bool = False):
     emoji_start, emoji_end = get_event_emojis(event["name"], event)
 
     embed = discord.Embed(
@@ -74,7 +77,8 @@ def build_static_end_embed(event: dict, end_ts: int, end_rome: datetime):
         inline=False
     )
 
-    embed.set_footer(text="Evento statico")
+    footer = "Evento statico — Recuperato" if recovered else "Evento statico"
+    embed.set_footer(text=footer)
     return embed
 
 
@@ -82,7 +86,7 @@ def build_static_end_embed(event: dict, end_ts: int, end_rome: datetime):
 # COG EVENTI STATICI
 # ---------------------------------------------------
 
-class Events(commands.Cog):
+class StaticEvents(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.events = []
@@ -98,27 +102,28 @@ class Events(commands.Cog):
         try:
             with open(LOCAL_EVENTS_FILE, "r", encoding="utf-8") as f:
                 self.events = json.load(f)
-            print("Eventi caricati dal file locale.")
+            print("[StaticEvents] Eventi caricati dal file locale.")
         except Exception as e:
-            print(f"Errore caricamento eventi locali: {e}")
+            print(f"[StaticEvents] Errore caricamento eventi locali: {e}")
+            self.events = []
 
     async def fetch_remote_events(self):
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(REMOTE_EVENTS_URL) as resp:
                     if resp.status != 200:
-                        print(f"Errore JSON remoto: {resp.status}")
+                        print(f"[StaticEvents] Errore JSON remoto: {resp.status}")
                         return None
 
                     text = await resp.text()
                     try:
                         return json.loads(text)
                     except json.JSONDecodeError:
-                        print("Errore: JSON remoto non valido.")
+                        print("[StaticEvents] Errore: JSON remoto non valido.")
                         return None
 
         except Exception as e:
-            print(f"Errore fetch remoto: {e}")
+            print(f"[StaticEvents] Errore fetch remoto: {e}")
             return None
 
     @tasks.loop(hours=12)
@@ -126,21 +131,28 @@ class Events(commands.Cog):
         remote = await self.fetch_remote_events()
         if remote:
             self.events = remote
-            print("Eventi aggiornati dal JSON remoto.")
+            print("[StaticEvents] Eventi aggiornati dal JSON remoto.")
 
     # ---------------------------
     # STATO ANNUNCI
     # ---------------------------
 
     def load_state(self):
-        try:
-            with open("events_state.json", "r", encoding="utf-8") as f:
-                self.state = json.load(f)
-        except:
+        if os.path.exists(STATE_FILE):
+            try:
+                with open(STATE_FILE, "r", encoding="utf-8") as f:
+                    self.state = json.load(f)
+            except Exception:
+                self.state = {}
+        else:
             self.state = {}
 
+        # spazio dedicato agli eventi statici
+        if "static" not in self.state:
+            self.state["static"] = {}
+
     def save_state(self):
-        with open("events_state.json", "w", encoding="utf-8") as f:
+        with open(STATE_FILE, "w", encoding="utf-8") as f:
             json.dump(self.state, f, indent=2)
 
     # ---------------------------
@@ -148,6 +160,8 @@ class Events(commands.Cog):
     # ---------------------------
 
     def reset_if_finished(self, event_name: str, now_rome: datetime):
+        static_state = self.state.get("static", {})
+
         future_events = [
             e for e in self.events
             if e["name"] == event_name and
@@ -157,11 +171,12 @@ class Events(commands.Cog):
         ]
 
         if future_events:
-            self.state[event_name] = {"start": False, "end": False}
+            static_state[event_name] = {"start": False, "end": False}
         else:
-            if event_name in self.state:
-                del self.state[event_name]
+            if event_name in static_state:
+                del static_state[event_name]
 
+        self.state["static"] = static_state
         self.save_state()
 
     # ---------------------------
@@ -173,8 +188,10 @@ class Events(commands.Cog):
         now_rome = datetime.now(ZoneInfo("Europe/Rome"))
         channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
         if channel is None:
-            print("Canale annunci non trovato.")
+            print("[StaticEvents] Canale annunci non trovato.")
             return
+
+        static_state = self.state.get("static", {})
 
         for event in self.events:
             name = event["name"]
@@ -184,7 +201,7 @@ class Events(commands.Cog):
                 start = datetime.fromisoformat(event["start"]).replace(tzinfo=tz)
                 end = datetime.fromisoformat(event["end"]).replace(tzinfo=tz)
             except Exception:
-                print(f"Evento '{name}' ha una data non valida. Saltato.")
+                print(f"[StaticEvents] Evento '{name}' ha una data non valida. Saltato.")
                 continue
 
             start_rome = start.astimezone(ZoneInfo("Europe/Rome"))
@@ -194,24 +211,30 @@ class Events(commands.Cog):
                 self.reset_if_finished(name, now_rome)
                 continue
 
-            if name not in self.state:
-                self.state[name] = {"start": False, "end": False}
+            if name not in static_state:
+                static_state[name] = {"start": False, "end": False}
 
             start_ts = int(start.timestamp())
             end_ts = int(end.timestamp())
 
+            # Annuncio INIZIO (giorno prima alle 18:00)
             announce_start_dt = (start_rome - timedelta(days=1)).replace(hour=18, minute=0, second=0)
-            if not self.state[name]["start"] and now_rome >= announce_start_dt:
-                embed = build_static_start_embed(event, start_ts, start_rome)
+            if not static_state[name]["start"] and now_rome >= announce_start_dt:
+                recovered = now_rome > start_rome  # se siamo oltre l'orario di inizio, è recupero
+                embed = build_static_start_embed(event, start_ts, start_rome, recovered=recovered)
                 await channel.send(embed=embed)
-                self.state[name]["start"] = True
+                static_state[name]["start"] = True
+                self.state["static"] = static_state
                 self.save_state()
 
+            # Annuncio FINE (giorno prima alle 18:00)
             announce_end_dt = (end_rome - timedelta(days=1)).replace(hour=18, minute=0, second=0)
-            if not self.state[name]["end"] and now_rome >= announce_end_dt:
-                embed = build_static_end_embed(event, end_ts, end_rome)
+            if not static_state[name]["end"] and now_rome >= announce_end_dt:
+                recovered = now_rome > end_rome  # se siamo oltre l'orario di fine, è recupero
+                embed = build_static_end_embed(event, end_ts, end_rome, recovered=recovered)
                 await channel.send(embed=embed)
-                self.state[name]["end"] = True
+                static_state[name]["end"] = True
+                self.state["static"] = static_state
                 self.save_state()
 
     # ---------------------------
@@ -288,4 +311,4 @@ class Events(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(Events(bot))
+    await bot.add_cog(StaticEvents(bot))
