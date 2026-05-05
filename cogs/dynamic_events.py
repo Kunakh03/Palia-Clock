@@ -196,8 +196,6 @@ class DynamicEvents(commands.Cog):
             )
             return
 
-        now = datetime.now(ZoneInfo("Europe/Rome"))
-
         event = {
             "name": nome,
             "description": descrizione,
@@ -211,37 +209,10 @@ class DynamicEvents(commands.Cog):
 
         channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
 
-        # -------------------------
-        # CASO 1 — Evento FUTURO
-        # -------------------------
-        if now < dt_start:
-            embed = build_start_embed(event, recovered=False)
-            msg = await channel.send(embed=embed)
-            event["start_message_id"] = msg.id
+        embed = build_start_embed(event)
+        msg = await channel.send(embed=embed)
+        event["start_message_id"] = msg.id
 
-        # -------------------------
-        # CASO 2 — Evento già INIZIATO
-        # -------------------------
-        elif dt_start <= now < dt_end:
-            embed = build_start_embed(event, recovered=True)
-            msg = await channel.send(embed=embed)
-            event["start_message_id"] = msg.id
-
-        # -------------------------
-        # CASO 3 — Evento già FINITO
-        # -------------------------
-        else:
-            # Recupero INIZIO
-            embed_start = build_start_embed(event, recovered=True)
-            msg_start = await channel.send(embed=embed_start)
-            event["start_message_id"] = msg_start.id
-
-            # Recupero FINE
-            embed_end = build_end_embed(event, recovered=True)
-            msg_end = await channel.send(embed=embed_end)
-            event["end_message_id"] = msg_end.id
-
-        # Salvataggio evento
         self.events.append(event)
         self.save_events()
 
