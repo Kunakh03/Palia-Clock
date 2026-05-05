@@ -206,7 +206,7 @@ class DynamicEvents(commands.Cog):
             "timezone": "Europe/Rome",
             "color": "#FFD700",
             "start_message_id": None,
-            "end_message_id": None
+            "end_message_id": None,
             "recovered_start": False
         }
 
