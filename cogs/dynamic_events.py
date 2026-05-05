@@ -223,12 +223,14 @@ class DynamicEvents(commands.Cog):
             embed = build_start_embed(event, recovered=True)
             msg = await channel.send(embed=embed)
             event["start_message_id"] = msg.id
+            event["recovered_start"] = True
 
         # Evento già FINITO
         else:
             embed_start = build_start_embed(event, recovered=True)
             msg_start = await channel.send(embed=embed_start)
             event["start_message_id"] = msg_start.id
+            event["recovered_start"] = True
 
             embed_end = build_end_embed(event, recovered=True)
             msg_end = await channel.send(embed=embed_end)
@@ -342,7 +344,7 @@ class DynamicEvents(commands.Cog):
             end_msg_id = event.get("end_message_id")
             if end_msg_id:
                 msg = await channel.fetch_message(end_msg_id)
-                await msg.edit(embed=build_end_embed(event))
+                await msg.edit(embed=build_end_embed(event, recovered=event.get("recovered_start", False)))
 
     @update_countdowns.before_loop
     async def before_update(self):
