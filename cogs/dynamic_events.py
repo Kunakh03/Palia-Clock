@@ -179,7 +179,7 @@ class DynamicEvents(commands.Cog):
         fine: str
     ):
         try:
-            dt_start = parse_datetime(inizio)
+            dt_start = parse_datetime(inizio).replace(tzinfo=ZoneInfo("Europe/Rome"))
         except Exception:
             await interaction.response.send_message(
                 "❌ Formato INIZIO non valido. Usa **GG-MM-AAAA HH:MM**",
@@ -188,7 +188,7 @@ class DynamicEvents(commands.Cog):
             return
 
         try:
-            dt_end = parse_datetime(fine)
+            dt_end = parse_datetime(fine).replace(tzinfo=ZoneInfo("Europe/Rome"))
         except Exception:
             await interaction.response.send_message(
                 "❌ Formato FINE non valido. Usa **GG-MM-AAAA HH:MM**",
