@@ -163,21 +163,21 @@ class DynamicEvents(commands.Cog):
     # COMANDO /addevents
     # ---------------------------
 
-    @app_commands.command(name="addevents", description="Aggiunge un evento dinamico")
-    @app_commands.describe(
+        @app_commands.command(name="addevents", description="Aggiunge un evento dinamico")
+        @app_commands.describe(
         nome="Nome dell'evento",
         descrizione="Descrizione dell'evento",
         inizio="Inserire GG-MM-AAAA HH:MM",
         fine="Inserire GG-MM-AAAA HH:MM"
-    )
-    async def add_event(
+        )
+        async def add_event(
         self,
         interaction: discord.Interaction,
         nome: str,
         descrizione: str,
         inizio: str,
         fine: str
-    ):
+        ):
         try:
             dt_start = parse_datetime(inizio)
         except Exception:
@@ -196,6 +196,8 @@ class DynamicEvents(commands.Cog):
             )
             return
 
+        now = datetime.now(ZoneInfo("Europe/Rome"))
+
         event = {
             "name": nome,
             "description": descrizione,
@@ -209,9 +211,27 @@ class DynamicEvents(commands.Cog):
 
         channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
 
-        embed = build_start_embed(event)
-        msg = await channel.send(embed=embed)
-        event["start_message_id"] = msg.id
+        # Evento FUTURO → annuncio normale
+        if now < dt_start:
+            embed = build_start_embed(event, recovered=False)
+            msg = await channel.send(embed=embed)
+            event["start_message_id"] = msg.id
+
+        # Evento già INIZIATO → annuncio recuperato
+        elif dt_start <= now < dt_end:
+            embed = build_start_embed(event, recovered=True)
+            msg = await channel.send(embed=embed)
+            event["start_message_id"] = msg.id
+
+        # Evento già FINITO → recupero inizio + recupero fine
+        else:
+            embed_start = build_start_embed(event, recovered=True)
+            msg_start = await channel.send(embed=embed_start)
+            event["start_message_id"] = msg_start.id
+
+            embed_end = build_end_embed(event, recovered=True)
+            msg_end = await channel.send(embed=embed_end)
+            event["end_message_id"] = msg_end.id
 
         self.events.append(event)
         self.save_events()
