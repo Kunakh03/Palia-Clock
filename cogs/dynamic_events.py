@@ -207,6 +207,7 @@ class DynamicEvents(commands.Cog):
             "color": "#FFD700",
             "start_message_id": None,
             "end_message_id": None
+            "recovered_start": False
         }
 
         channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
