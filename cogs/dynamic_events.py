@@ -274,6 +274,7 @@ class DynamicEvents(commands.Cog):
                 embed = build_start_embed(event, recovered=True)
                 msg = await channel.send(embed=embed)
                 event["start_message_id"] = msg.id
+                event["recovered_start"] = True
                 entry["start_recovered"] = True
                 changed_events = True
 
