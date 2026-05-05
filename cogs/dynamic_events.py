@@ -100,7 +100,7 @@ def build_end_embed(event: dict, recovered=False):
     embed.add_field(
         name="",
         value=(
-            f"L'evento terminerà domani alle <t:{end_ts}:t>!\n"
+            f"L'evento terminerà alle <t:{end_ts}:t>!\n"
             f"**Countdown:** {countdown}"
         ),
         inline=False
@@ -203,7 +203,6 @@ class DynamicEvents(commands.Cog):
             "end": to_iso(dt_end),
             "timezone": "Europe/Rome",
             "color": "#FFD700",
-            "end_announced": False,
             "start_message_id": None,
             "end_message_id": None
         }
@@ -213,8 +212,6 @@ class DynamicEvents(commands.Cog):
         embed = build_start_embed(event)
         msg = await channel.send(embed=embed)
         event["start_message_id"] = msg.id
-
-        await msg.edit(embed=build_start_embed(event))
 
         self.events.append(event)
         self.save_events()
@@ -287,7 +284,7 @@ class DynamicEvents(commands.Cog):
         changed = False
 
         for event in self.events:
-            if event["end_announced"]:
+            if event.get("end_message_id"):
                 continue
 
             end_dt = from_iso(event["end"], event["timezone"])
@@ -298,7 +295,6 @@ class DynamicEvents(commands.Cog):
                 embed = build_end_embed(event)
                 msg = await channel.send(embed=embed)
                 event["end_message_id"] = msg.id
-                event["end_announced"] = True
                 changed = True
 
         if changed:
@@ -373,4 +369,4 @@ class DynamicEvents(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(DynamicEvents(bot))
+    await
