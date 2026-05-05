@@ -369,4 +369,4 @@ class DynamicEvents(commands.Cog):
 
 
 async def setup(bot):
-    await
+    await bot.add_cog(DynamicEvents(bot))
