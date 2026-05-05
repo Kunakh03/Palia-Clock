@@ -147,7 +147,6 @@ class StaticEvents(commands.Cog):
         else:
             self.state = {}
 
-        # spazio dedicato agli eventi statici
         if "static" not in self.state:
             self.state["static"] = {}
 
@@ -217,24 +216,24 @@ class StaticEvents(commands.Cog):
             start_ts = int(start.timestamp())
             end_ts = int(end.timestamp())
 
-            # Annuncio INIZIO (giorno prima alle 18:00)
+            # Annuncio INIZIO — RECUPERO AUTOMATICO
             announce_start_dt = (start_rome - timedelta(days=1)).replace(hour=18, minute=0, second=0)
-            if not static_state[name]["start"] and now_rome >= announce_start_dt:
-                recovered = now_rome > start_rome  # se siamo oltre l'orario di inizio, è recupero
+
+            if now_rome >= announce_start_dt and not static_state[name]["start"]:
+                recovered = now_rome > start_rome
                 embed = build_static_start_embed(event, start_ts, start_rome, recovered=recovered)
                 await channel.send(embed=embed)
                 static_state[name]["start"] = True
-                self.state["static"] = static_state
                 self.save_state()
 
-            # Annuncio FINE (giorno prima alle 18:00)
+            # Annuncio FINE — RECUPERO AUTOMATICO
             announce_end_dt = (end_rome - timedelta(days=1)).replace(hour=18, minute=0, second=0)
-            if not static_state[name]["end"] and now_rome >= announce_end_dt:
-                recovered = now_rome > end_rome  # se siamo oltre l'orario di fine, è recupero
+
+            if now_rome >= announce_end_dt and not static_state[name]["end"]:
+                recovered = now_rome > end_rome
                 embed = build_static_end_embed(event, end_ts, end_rome, recovered=recovered)
                 await channel.send(embed=embed)
                 static_state[name]["end"] = True
-                self.state["static"] = static_state
                 self.save_state()
 
     # ---------------------------
