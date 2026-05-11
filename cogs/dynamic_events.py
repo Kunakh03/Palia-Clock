@@ -367,16 +367,19 @@ class DynamicEvents(commands.Cog):
     # LOOP: CLEANUP
     # ---------------------------
 
-    @tasks.loop(minutes=5)
+    @tasks.loop(hours=1)
     async def cleanup_events(self):
         now = datetime.now(ZoneInfo("Europe/Rome"))
         new_list = []
 
         for event in self.events:
             end_dt = from_iso(event["end"], event["timezone"])
-            if now < end_dt:
+
+            # Mantieni l'evento per 1 ora dopo la fine
+            if now < end_dt + timedelta(hours=1):
                 new_list.append(event)
 
+        # Se la lista cambia, salva il nuovo file
         if len(new_list) != len(self.events):
             self.events = new_list
             self.save_events()
