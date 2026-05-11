@@ -337,15 +337,27 @@ class DynamicEvents(commands.Cog):
         channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
 
         for event in self.events:
+            # Aggiornamento messaggio di INIZIO
             msg_id = event.get("start_message_id")
             if msg_id:
                 msg = await channel.fetch_message(msg_id)
-                await msg.edit(embed=build_start_embed(event))
+                await msg.edit(
+                    embed=build_start_embed(
+                        event,
+                        recovered=event.get("recovered_start", False)
+                    )
+                )
 
+            # Aggiornamento messaggio di FINE
             end_msg_id = event.get("end_message_id")
             if end_msg_id:
                 msg = await channel.fetch_message(end_msg_id)
-                await msg.edit(embed=build_end_embed(event, recovered=event.get("recovered_start", False)))
+                await msg.edit(
+                    embed=build_end_embed(
+                        event,
+                        recovered=event.get("recovered_start", False)
+                    )
+                )
 
     @update_countdowns.before_loop
     async def before_update(self):
