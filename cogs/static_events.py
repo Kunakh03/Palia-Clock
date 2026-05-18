@@ -6,6 +6,7 @@ import json
 import aiohttp
 from datetime import datetime, timedelta
 import os
+import asyncio
 
 REMOTE_EVENTS_URL = "https://raw.githubusercontent.com/Kunakh03/Palia-Clock/main/static_events.json"
 LOCAL_EVENTS_FILE = "static_events.json"
@@ -13,6 +14,12 @@ STATE_FILE = "events_state.json"
 
 ANNOUNCE_CHANNEL_ID = 1483229095738212533
 MENTION_ROLE_ID = 1393698659421655196
+
+# Utente a cui mandare il DM in caso di cambiamenti sulla wiki
+OWNER_ID = 276164839997702147
+
+# Wiki Maji Market
+MAJI_WIKI_URL = "https://palia.wiki.gg/wiki/Maji_Market"
 
 # Emoji personalizzate
 EMOJI_MAJI_START = "<:Dragon:1499063330256457728>"
@@ -46,7 +53,6 @@ def build_static_start_embed(event: dict, start_ts: int, start_rome: datetime, r
     ora = start_rome.strftime("%H:%M")
 
     embed.add_field(name="", value=f"<@&{MENTION_ROLE_ID}>", inline=False)
-
     embed.add_field(
         name="",
         value=f"L'evento inizierà domani alle {ora}!\n**Countdown:** <t:{start_ts}:R>",
@@ -70,7 +76,6 @@ def build_static_end_embed(event: dict, end_ts: int, end_rome: datetime, recover
     ora = end_rome.strftime("%H:%M")
 
     embed.add_field(name="", value=f"<@&{MENTION_ROLE_ID}>", inline=False)
-
     embed.add_field(
         name="",
         value=f"L'evento terminerà domani alle {ora}!\n**Countdown:** <t:{end_ts}:R>",
@@ -93,6 +98,7 @@ class StaticEvents(commands.Cog):
         self.state = {}
         self.load_local_events()
         self.load_state()
+        self._wiki_last_check_day = None  # per evitare doppi check la stessa domenica
 
     # ---------------------------
     # CARICAMENTO EVENTI
@@ -104,7 +110,7 @@ class StaticEvents(commands.Cog):
                 self.events = json.load(f)
             print("[StaticEvents] Eventi caricati dal file locale.")
         except Exception as e:
-            print(f"[StaticEvents] Errore caricamento eventi locali: {e}")
+            print(f("[StaticEvents] Errore caricamento eventi locali: {e}"))
             self.events = []
 
     async def fetch_remote_events(self):
@@ -212,13 +218,13 @@ class StaticEvents(commands.Cog):
 
             if name not in static_state:
                 static_state[name] = {"start": False, "end": False}
+                self.save_state()
 
             start_ts = int(start.timestamp())
             end_ts = int(end.timestamp())
 
             # Annuncio INIZIO — RECUPERO AUTOMATICO
             announce_start_dt = (start_rome - timedelta(days=1)).replace(hour=18, minute=0, second=0)
-
             if now_rome >= announce_start_dt and not static_state[name]["start"]:
                 recovered = now_rome > start_rome
                 embed = build_static_start_embed(event, start_ts, start_rome, recovered=recovered)
@@ -228,13 +234,161 @@ class StaticEvents(commands.Cog):
 
             # Annuncio FINE — RECUPERO AUTOMATICO
             announce_end_dt = (end_rome - timedelta(days=1)).replace(hour=18, minute=0, second=0)
-
             if now_rome >= announce_end_dt and not static_state[name]["end"]:
                 recovered = now_rome > end_rome
                 embed = build_static_end_embed(event, end_ts, end_rome, recovered=recovered)
                 await channel.send(embed=embed)
                 static_state[name]["end"] = True
                 self.save_state()
+
+    # ---------------------------
+    # CONTROLLO WIKI DOMENICA 19:00
+    # ---------------------------
+
+    async def fetch_maji_wiki_html(self) -> str | None:
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(MAJI_WIKI_URL) as resp:
+                    if resp.status != 200:
+                        print(f"[StaticEvents] Errore fetch wiki Maji: {resp.status}")
+                        return None
+                    return await resp.text()
+        except Exception as e:
+            print(f"[StaticEvents] Errore fetch wiki Maji: {e}")
+            return None
+
+    def parse_maji_future_dates(self, html: str):
+        """
+        Parser semplice: cerca la sezione 'Future Dates' e prende le righe
+        con due date (start/end) in formato 'Month DD, YYYY – Month DD, YYYY'.
+        Questo è volutamente minimale: se la wiki cambia struttura,
+        andrà eventualmente adattato.
+        """
+        future = []
+
+        marker = "Future Dates"
+        idx = html.find(marker)
+        if idx == -1:
+            return future
+
+        snippet = html[idx: idx + 8000]  # porzione dopo 'Future Dates'
+
+        import re
+        # pattern molto semplice: "Month DD, YYYY" – "Month DD, YYYY"
+        date_pattern = r"([A-Z][a-z]+ \d{1,2}, \d{4})\s*[\u2013\-]\s*([A-Z][a-z]+ \d{1,2}, \d{4})"
+        matches = re.findall(date_pattern, snippet)
+
+        from datetime import datetime as dt
+
+        for start_str, end_str in matches:
+            try:
+                start_dt = dt.strptime(start_str, "%B %d, %Y")
+                end_dt = dt.strptime(end_str, "%B %d, %Y")
+            except ValueError:
+                continue
+
+            # convertiamo in ISO con orario 00:00:00 in America/Los_Angeles
+            start_iso = start_dt.strftime("%Y-%m-%dT00:00:00")
+            end_iso = end_dt.strftime("%Y-%m-%dT00:00:00")
+
+            future.append({
+                "start": start_iso,
+                "end": end_iso,
+            })
+
+        return future
+
+    def extract_maji_from_events(self):
+        maji = []
+        for e in self.events:
+            if e.get("name") == "Mercato Maji":
+                maji.append({
+                    "start": e.get("start"),
+                    "end": e.get("end"),
+                })
+        # ordiniamo per start
+        maji.sort(key=lambda x: x["start"])
+        return maji
+
+    def compare_maji_dates(self, wiki_dates, json_dates) -> bool:
+        """
+        Ritorna True se ci sono differenze tra wiki e JSON remoto.
+        Confronto semplice su lista di (start, end) ordinata.
+        """
+        if len(wiki_dates) != len(json_dates):
+            return True
+
+        for w, j in zip(wiki_dates, json_dates):
+            if w["start"] != j["start"] or w["end"] != j["end"]:
+                return True
+
+        return False
+
+    @tasks.loop(hours=24)
+    async def check_maji_wiki(self):
+        """
+        Controllo giornaliero, ma agisce solo la domenica alle 19:00 Europe/Rome.
+        Se le date del Maji sulla wiki differiscono dal JSON remoto,
+        manda un DM all'OWNER_ID.
+        """
+        now_rome = datetime.now(ZoneInfo("Europe/Rome"))
+        # Domenica = 6
+        if now_rome.weekday() != 6:
+            return
+
+        if now_rome.hour != 19:
+            return
+
+        # Evita doppi check la stessa domenica
+        day_key = now_rome.strftime("%Y-%m-%d")
+        if self._wiki_last_check_day == day_key:
+            return
+
+        self._wiki_last_check_day = day_key
+
+        print("[StaticEvents] Controllo wiki Maji Market...")
+
+        html = await self.fetch_maji_wiki_html()
+        if not html:
+            return
+
+        wiki_dates = self.parse_maji_future_dates(html)
+        if not wiki_dates:
+            print("[StaticEvents] Nessuna data futura trovata sulla wiki (parser).")
+            return
+
+        # Usa gli eventi attualmente caricati (che derivano dal JSON remoto)
+        json_maji = self.extract_maji_from_events()
+
+        changed = self.compare_maji_dates(wiki_dates, json_maji)
+        if not changed:
+            print("[StaticEvents] Le date del Maji sulla wiki coincidono con il JSON remoto.")
+            return
+
+        # Se ci sono differenze, manda DM
+        try:
+            user = await self.bot.fetch_user(OWNER_ID)
+            msg_lines = ["Le date del **Mercato Maji** sulla wiki sono cambiate rispetto al JSON remoto.", ""]
+            msg_lines.append("**Wiki (Future Dates):**")
+            for d in wiki_dates:
+                msg_lines.append(f"- {d['start']} → {d['end']}")
+
+            msg_lines.append("")
+            msg_lines.append("**JSON remoto (Mercato Maji):**")
+            for d in json_maji:
+                msg_lines.append(f"- {d['start']} → {d['end']}")
+
+            await user.send("\n".join(msg_lines))
+            print("[StaticEvents] DM inviato per cambiamento date Maji.")
+        except Exception as e:
+            print(f"[StaticEvents] Errore invio DM Maji: {e}")
+
+    @check_maji_wiki.before_loop
+    async def before_check_maji_wiki(self):
+        # Aspetta che il bot sia pronto
+        await self.bot.wait_until_ready()
+        # Nessun allineamento speciale: il loop gira ogni 24h,
+        # ma la logica interna filtra per domenica 19:00.
 
     # ---------------------------
     # COMANDO /testevents
@@ -266,6 +420,33 @@ class StaticEvents(commands.Cog):
             embed = build_static_end_embed(event, end_ts, end_rome)
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    # ---------------------------
+    # COMANDO /debugevents
+    # ---------------------------
+
+    @app_commands.command(name="debugevents", description="Mostra gli eventi statici caricati e lo stato annunci.")
+    async def debugevents(self, interaction: discord.Interaction):
+        static_state = self.state.get("static", {})
+        lines = []
+
+        lines.append("**Eventi caricati:**")
+        for e in sorted(self.events, key=lambda x: x.get("start", "")):
+            name = e.get("name", "??")
+            start = e.get("start", "?")
+            end = e.get("end", "?")
+            lines.append(f"- `{name}`: {start} → {end}")
+
+        lines.append("")
+        lines.append("**Stato annunci (static):**")
+        if not static_state:
+            lines.append("_Nessuno stato salvato._")
+        else:
+            for name, st in static_state.items():
+                lines.append(f"- `{name}`: start={st.get('start')}, end={st.get('end')}")
+
+        msg = "\n".join(lines)
+        await interaction.response.send_message(msg, ephemeral=True)
 
     # ---------------------------
     # AUTOCOMPLETE
@@ -303,10 +484,18 @@ class StaticEvents(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
+        # Carica subito gli eventi remoti all'avvio
+        remote = await self.fetch_remote_events()
+        if remote:
+            self.events = remote
+            print("[StaticEvents] Eventi caricati dal JSON remoto all'avvio.")
+
         if not self.check_events.is_running():
             self.check_events.start()
         if not self.refresh_events.is_running():
             self.refresh_events.start()
+        if not self.check_maji_wiki.is_running():
+            self.check_maji_wiki.start()
 
 
 async def setup(bot):
