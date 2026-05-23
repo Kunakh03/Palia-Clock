@@ -1,11 +1,9 @@
 import datetime
+import asyncio
 import discord
 from discord.ext import commands, tasks
 import time
 import os
-
-# === IMPORT TEMPO COSMETICO DAL COG ===
-from cogs.paliatime import compute_palia_time
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -38,6 +36,48 @@ class MyBot(commands.Bot):
 bot = MyBot()
 
 
+# === TEMPO COSMETICO INTEGRATO NEL MAIN ===
+
+last_visual_seconds = None
+last_visual_real = None
+VISUAL_RATIO = 2.5   # 1 minuto Palia = 2.5 secondi reali
+
+def compute_palia_time():
+    global last_visual_seconds, last_visual_real
+
+    now = time.time()
+
+    # Tempo reale di Palia
+    epoch = now
+    real_palia_seconds = (epoch * 24) % 86400
+
+    # Prima chiamata
+    if last_visual_seconds is None:
+        last_visual_seconds = real_palia_seconds
+        last_visual_real = now
+
+    # Delta reale
+    delta_real = now - last_visual_real
+    delta_palia_minutes = delta_real / VISUAL_RATIO
+    delta_palia_seconds = delta_palia_minutes * 60
+
+    cosmetic = (last_visual_seconds + delta_palia_seconds) % 86400
+
+    # Aggancia sempre al tempo reale se è avanti
+    if real_palia_seconds > cosmetic:
+        cosmetic = real_palia_seconds
+
+    last_visual_seconds = cosmetic
+    last_visual_real = now
+
+    hour = int(cosmetic // 3600)
+    minute = int((cosmetic % 3600) // 60)
+    display_hour = hour % 12 or 12
+    suffix = "AM" if hour < 12 else "PM"
+
+    return hour, minute, display_hour, suffix
+
+
 # === UTILS ===
 
 def round_to_3_hours(hour):
@@ -61,7 +101,7 @@ def get_phase(hour):
         return "Notte", EMOJI_NOTTE_UNI
 
 
-# === RINOMINA CANALE (NUOVO SISTEMA ORARIO) ===
+# === RINOMINA CANALE (BLOCCHI 3 ORE) ===
 
 last_name = None
 
@@ -82,7 +122,7 @@ async def update_channel():
     rounded_display = rounded_hour % 12 or 12
     rounded_suffix = "AM" if rounded_hour < 12 else "PM"
 
-    # Fase del giorno (Mattino/Giorno/Sera/Notte)
+    # Fase del giorno
     phase, icon_uni = get_phase(rounded_hour)
 
     new_name = f"{icon_uni} {rounded_display}:00 {rounded_suffix} — {phase}"
@@ -95,6 +135,19 @@ async def update_channel():
         last_name = new_name
     except Exception as e:
         print(f"Errore aggiornamento canale: {e}")
+
+
+# === ALLINEAMENTO DEL LOOP AI MULTIPLI DI 6 MINUTI ===
+
+@update_channel.before_loop
+async def before_update_channel():
+    await bot.wait_until_ready()
+
+    now = datetime.datetime.now()
+    seconds = now.minute * 60 + now.second
+    wait = 360 - (seconds % 360)
+
+    await asyncio.sleep(wait)
 
 
 # === AVVIO BOT ===
