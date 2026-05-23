@@ -103,11 +103,11 @@ def get_phase(hour):
 
 # === RINOMINA CANALE (BLOCCHI 3 ORE) ===
 
-last_name = None
+last_block = None
 
-@tasks.loop(seconds=360)   # ogni 6 minuti reali
+@tasks.loop(seconds=60)   # leggerissimo, preciso
 async def update_channel():
-    global last_name
+    global last_block
 
     channel_id = 1483229095738212533
     channel = bot.get_channel(channel_id)
@@ -117,37 +117,27 @@ async def update_channel():
     # Otteniamo l'ora cosmetica reale di Palia
     hour, minute, display_hour, suffix = compute_palia_time()
 
-    # Arrotondamento ai blocchi di 3 ore
-    rounded_hour = round_to_3_hours(hour)
-    rounded_display = rounded_hour % 12 or 12
-    rounded_suffix = "AM" if rounded_hour < 12 else "PM"
+    # Calcolo blocco attuale
+    current_block = round_to_3_hours(hour)
 
-    # Fase del giorno
-    phase, icon_uni = get_phase(rounded_hour)
+    # Se il blocco non è cambiato → non fare nulla
+    if current_block == last_block:
+        return
+
+    # Aggiorna blocco
+    last_block = current_block
+
+    # Calcolo nome canale
+    rounded_display = current_block % 12 or 12
+    rounded_suffix = "AM" if current_block < 12 else "PM"
+    phase, icon_uni = get_phase(current_block)
 
     new_name = f"{icon_uni} {rounded_display}:00 {rounded_suffix} — {phase}"
 
-    if new_name == last_name:
-        return
-
     try:
         await channel.edit(name=new_name)
-        last_name = new_name
     except Exception as e:
         print(f"Errore aggiornamento canale: {e}")
-
-
-# === ALLINEAMENTO DEL LOOP AI MULTIPLI DI 6 MINUTI ===
-
-@update_channel.before_loop
-async def before_update_channel():
-    await bot.wait_until_ready()
-
-    now = datetime.datetime.now()
-    seconds = now.minute * 60 + now.second
-    wait = 360 - (seconds % 360)
-
-    await asyncio.sleep(wait)
 
 
 # === AVVIO BOT ===
