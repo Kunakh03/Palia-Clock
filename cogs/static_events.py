@@ -108,9 +108,8 @@ class StaticEvents(commands.Cog):
         try:
             with open(LOCAL_EVENTS_FILE, "r", encoding="utf-8") as f:
                 self.events = json.load(f)
-            print("[StaticEvents] Eventi caricati dal file locale.")
         except Exception as e:
-            print(f("[StaticEvents] Errore caricamento eventi locali: {e}"))
+            print(f"[StaticEvents] Errore caricamento eventi locali: {e}")
             self.events = []
 
     async def fetch_remote_events(self):
@@ -137,7 +136,6 @@ class StaticEvents(commands.Cog):
         remote = await self.fetch_remote_events()
         if remote:
             self.events = remote
-            print("[StaticEvents] Eventi aggiornati dal JSON remoto.")
 
     # ---------------------------
     # STATO ANNUNCI
@@ -354,7 +352,6 @@ class StaticEvents(commands.Cog):
 
         wiki_dates = self.parse_maji_future_dates(html)
         if not wiki_dates:
-            print("[StaticEvents] Nessuna data futura trovata sulla wiki (parser).")
             return
 
         # Usa gli eventi attualmente caricati (che derivano dal JSON remoto)
@@ -362,7 +359,6 @@ class StaticEvents(commands.Cog):
 
         changed = self.compare_maji_dates(wiki_dates, json_maji)
         if not changed:
-            print("[StaticEvents] Le date del Maji sulla wiki coincidono con il JSON remoto.")
             return
 
         # Se ci sono differenze, manda DM
