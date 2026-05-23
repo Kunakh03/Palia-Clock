@@ -4,17 +4,8 @@ from discord.ext import commands, tasks
 import time
 import os
 
-# === OROLOGIO INTERNO DI PALIA ===
-
-internal_palia_seconds = None
-last_update_real = None
-palia_speed = 24.0
-
-# === TEMPO COSMETICO ===
-
-last_visual_seconds = None
-last_visual_real_time = None
-VISUAL_RATIO = 2.0
+# === IMPORT TEMPO COSMETICO DAL COG ===
+from cogs.paliatime import compute_palia_time
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -32,70 +23,19 @@ class MyBot(commands.Bot):
         # Caricamento COG
         await self.load_extension("cogs.paliatime")
         await self.load_extension("cogs.npc")
-        await self.load_extension("cogs.static_events")   # <-- sostituito
+        await self.load_extension("cogs.static_events")
         await self.load_extension("cogs.dynamic_events")
 
         # Sync comandi
         synced = await self.tree.sync()
         print("Comandi sincronizzati:", [cmd.name for cmd in synced])
 
-        # Inizializzazione orologio
-        initialize_palia_clock()
-
-        # Avvio loop
+        # Avvio loop canale orario
         if not update_channel.is_running():
             update_channel.start()
 
-        if not smooth_sync.is_running():
-            smooth_sync.start()
-
 
 bot = MyBot()
-
-
-# === INIZIALIZZAZIONE OROLOGIO ===
-
-def initialize_palia_clock():
-    global internal_palia_seconds, last_update_real
-    epoch = time.time()
-    internal_palia_seconds = (epoch * 24) % 86400
-    last_update_real = epoch
-
-
-# === AGGIORNAMENTO OROLOGIO INTERNO ===
-
-def update_internal_clock():
-    global internal_palia_seconds, last_update_real
-
-    now = time.time()
-    delta_real = now - last_update_real
-
-    internal_palia_seconds = (internal_palia_seconds + delta_real * palia_speed) % 86400
-    last_update_real = now
-
-
-# === CORREZIONE MORBIDA DELLA VELOCITÀ ===
-
-@tasks.loop(seconds=10)
-async def smooth_sync():
-    global palia_speed, internal_palia_seconds
-
-    epoch = time.time()
-    perfect = (epoch * 24) % 86400
-
-    update_internal_clock()
-
-    diff = (perfect - internal_palia_seconds + 86400) % 86400
-    if diff > 43200:
-        diff -= 86400
-
-    if abs(diff) < 60:
-        return
-
-    correction = diff / 600.0
-    correction = max(min(correction, 0.5), -0.5)
-
-    palia_speed = 24.0 + correction
 
 
 # === UTILS ===
@@ -121,11 +61,11 @@ def get_phase(hour):
         return "Notte", EMOJI_NOTTE_UNI
 
 
-# === RINOMINA CANALE ===
+# === RINOMINA CANALE (NUOVO SISTEMA ORARIO) ===
 
 last_name = None
 
-@tasks.loop(seconds=360)
+@tasks.loop(seconds=360)   # ogni 6 minuti reali
 async def update_channel():
     global last_name
 
@@ -134,13 +74,15 @@ async def update_channel():
     if channel is None:
         return
 
-    update_internal_clock()
+    # Otteniamo l'ora cosmetica reale di Palia
+    hour, minute, display_hour, suffix = compute_palia_time()
 
-    hour = int(internal_palia_seconds // 3600)
+    # Arrotondamento ai blocchi di 3 ore
     rounded_hour = round_to_3_hours(hour)
     rounded_display = rounded_hour % 12 or 12
     rounded_suffix = "AM" if rounded_hour < 12 else "PM"
 
+    # Fase del giorno (Mattino/Giorno/Sera/Notte)
     phase, icon_uni = get_phase(rounded_hour)
 
     new_name = f"{icon_uni} {rounded_display}:00 {rounded_suffix} — {phase}"
