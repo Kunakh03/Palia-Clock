@@ -188,7 +188,7 @@ class StaticEvents(commands.Cog):
     # CHECK EVENTI
     # ---------------------------
 
-    @tasks.loop(minutes=1)
+    @tasks.loop(minutes=30)
     async def check_events(self):
         now_rome = datetime.now(ZoneInfo("Europe/Rome"))
         channel = self.bot.get_channel(ANNOUNCE_CHANNEL_ID)
