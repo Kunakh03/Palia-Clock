@@ -1,4 +1,3 @@
-import datetime
 import asyncio
 import discord
 from discord.ext import commands, tasks
@@ -18,17 +17,14 @@ class MyBot(commands.Bot):
         )
 
     async def setup_hook(self):
-        # Caricamento COG
         await self.load_extension("cogs.paliatime")
         await self.load_extension("cogs.npc")
         await self.load_extension("cogs.static_events")
         await self.load_extension("cogs.dynamic_events")
 
-        # Sync comandi
         synced = await self.tree.sync()
         print("Comandi sincronizzati:", [cmd.name for cmd in synced])
 
-        # Avvio loop canale orario
         if not update_channel.is_running():
             update_channel.start()
 
@@ -41,6 +37,7 @@ bot = MyBot()
 last_visual_seconds = None
 last_visual_real = None
 VISUAL_RATIO = 2.5   # 1 minuto Palia = 2.5 secondi reali
+
 
 def compute_palia_time():
     global last_visual_seconds, last_visual_real
@@ -80,7 +77,7 @@ def compute_palia_time():
 
 # === UTILS ===
 
-def round_to_3_hours(hour):
+def round_to_3_hours(hour: int) -> int:
     return (hour // 3) * 3
 
 
@@ -90,7 +87,7 @@ EMOJI_SERA_UNI = "🌇"
 EMOJI_NOTTE_UNI = "🌙"
 
 
-def get_phase(hour):
+def get_phase(hour: int):
     if 3 <= hour < 6:
         return "Mattino", EMOJI_MATTINO_UNI
     elif 6 <= hour < 18:
@@ -105,7 +102,7 @@ def get_phase(hour):
 
 last_block = None
 
-@tasks.loop(seconds=60)   # leggerissimo, preciso
+@tasks.loop(seconds=1)   # controllo fine, rename rarissimo (ogni ~7.5 minuti reali)
 async def update_channel():
     global last_block
 
@@ -114,10 +111,10 @@ async def update_channel():
     if channel is None:
         return
 
-    # Otteniamo l'ora cosmetica reale di Palia
+    # Ora cosmetica di Palia
     hour, minute, display_hour, suffix = compute_palia_time()
 
-    # Calcolo blocco attuale
+    # Blocco attuale basato sull'ora cosmetica
     current_block = round_to_3_hours(hour)
 
     # Se il blocco non è cambiato → non fare nulla
@@ -127,7 +124,7 @@ async def update_channel():
     # Aggiorna blocco
     last_block = current_block
 
-    # Calcolo nome canale
+    # Costruisci nome canale
     rounded_display = current_block % 12 or 12
     rounded_suffix = "AM" if current_block < 12 else "PM"
     phase, icon_uni = get_phase(current_block)
