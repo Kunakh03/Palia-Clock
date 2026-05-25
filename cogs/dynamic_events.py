@@ -63,7 +63,7 @@ def build_start_embed(event: dict, recovered=False):
         color=int(event.get("color", "#FFD700").replace("#", "0x"), 16)
     )
 
-    embed.add_field(name="", value=f"<@&{MENTION_ROLE_ID}>", inline=False)
+    embed.add_field(name="\u200b", value=f"<@&{MENTION_ROLE_ID}>", inline=False)
 
     embed.add_field(
         name="",
