@@ -52,7 +52,7 @@ def build_static_start_embed(event: dict, start_ts: int, start_rome: datetime, r
 
     ora = start_rome.strftime("%H:%M")
 
-    embed.add_field(name="", value=f"<@&{MENTION_ROLE_ID}>", inline=False)
+    embed.add_field(name="\u200b", value=f"<@&{MENTION_ROLE_ID}>", inline=False)
     embed.add_field(
         name="",
         value=f"L'evento inizierà domani alle {ora}!\n**Countdown:** <t:{start_ts}:R>",
