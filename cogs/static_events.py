@@ -12,7 +12,7 @@ REMOTE_EVENTS_URL = "https://raw.githubusercontent.com/Kunakh03/Palia-Clock/main
 LOCAL_EVENTS_FILE = "static_events.json"
 STATE_FILE = "events_state.json"
 
-ANNOUNCE_CHANNEL_ID = 1483229095738212533
+ANNOUNCE_CHANNEL_ID = 1416482590596141248
 MENTION_ROLE_ID = 1393698659421655196
 
 # Utente a cui mandare il DM in caso di cambiamenti sulla wiki
