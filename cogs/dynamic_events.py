@@ -66,7 +66,7 @@ def build_start_embed(event: dict, recovered=False):
     embed.add_field(name="\u200b", value=f"<@&{MENTION_ROLE_ID}>", inline=False)
 
     embed.add_field(
-        name="",
+        name="\u200b",
         value=(
             f"{event['description']}\n\n"
             f"L'evento inizierà alle <t:{start_ts}:t>!\n"
