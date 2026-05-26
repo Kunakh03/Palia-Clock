@@ -51,7 +51,10 @@ def build_static_start_embed(event: dict, start_ts: int, start_rome: datetime, r
     embed.add_field(name="\u200b", value=f"<@&{MENTION_ROLE_ID}>", inline=False)
     embed.add_field(
         name="\u200b",
-        value=f"L'evento inizierà domani alle {ora}!\n**Countdown:** <t:{start_ts}:R>",
+        value=(
+            f"L'evento inizierà domani alle {ora}!\n"
+            f"**Countdown:** {'00:00' if datetime.now(ZoneInfo('Europe/Rome')) >= start_rome else f'<t:{start_ts}:R>'}"
+        ),
         inline=False
     )
 
@@ -74,7 +77,10 @@ def build_static_end_embed(event: dict, end_ts: int, end_rome: datetime, recover
     embed.add_field(name="\u200b", value=f"<@&{MENTION_ROLE_ID}>", inline=False)
     embed.add_field(
         name="\u200b",
-        value=f"L'evento terminerà domani alle {ora}!\n**Countdown:** <t:{end_ts}:R>",
+        value=(
+            f"L'evento terminerà domani alle {ora}!\n"
+            f"**Countdown:** {'00:00' if datetime.now(ZoneInfo('Europe/Rome')) >= end_rome else f'<t:{end_ts}:R>'}"
+        ),
         inline=False
     )
 
@@ -161,45 +167,67 @@ class StaticEvents(commands.Cog):
 
         static_state = self.state.get("static", {})
 
-        for event in self.events:
-            name = event["name"]
-            tz = ZoneInfo(event["timezone"])
+        # ---------------------------------------------------
+        # FILTRO EVENTI: scegli solo quello attuale o prossimo
+        # ---------------------------------------------------
 
+        # 1) Costruisci lista eventi validi (non finiti)
+        valid_events = []
+        for e in self.events:
             try:
-                start = datetime.fromisoformat(event["start"]).replace(tzinfo=tz)
-                end = datetime.fromisoformat(event["end"]).replace(tzinfo=tz)
+                tz = ZoneInfo(e["timezone"])
+                start = datetime.fromisoformat(e["start"]).replace(tzinfo=tz)
+                end = datetime.fromisoformat(e["end"]).replace(tzinfo=tz)
             except:
                 continue
 
             start_rome = start.astimezone(ZoneInfo("Europe/Rome"))
             end_rome = end.astimezone(ZoneInfo("Europe/Rome"))
 
-            event_key = f"{name}_{event['start']}_{event['end']}"
+            # Ignora eventi già finiti
+            if end_rome < now_rome:
+                continue
 
-            if event_key not in static_state:
-                static_state[event_key] = {"start": False, "end": False}
-                self.save_state()
+            valid_events.append((e, start_rome, end_rome))
 
-            start_ts = int(start.timestamp())
-            end_ts = int(end.timestamp())
+        # Nessun evento valido → non fare nulla
+        if not valid_events:
+            return
 
-            # Annuncio INIZIO
-            announce_start_dt = (start_rome - timedelta(days=1)).replace(hour=18, minute=0, second=0)
-            if now_rome >= announce_start_dt and not static_state[event_key]["start"]:
-                recovered = now_rome > start_rome
-                embed = build_static_start_embed(event, start_ts, start_rome, recovered=recovered)
-                await channel.send(embed=embed)
-                static_state[event_key]["start"] = True
-                self.save_state()
+        # 2) Prendi SOLO l’evento più vicino nel tempo
+        event, start_rome, end_rome = sorted(valid_events, key=lambda x: x[1])[0]
 
-            # Annuncio FINE
-            announce_end_dt = (end_rome - timedelta(days=1)).replace(hour=18, minute=0, second=0)
-            if now_rome >= announce_end_dt and not static_state[event_key]["end"]:
-                recovered = now_rome > end_rome
-                embed = build_static_end_embed(event, end_ts, end_rome, recovered=recovered)
-                await channel.send(embed=embed)
-                static_state[event_key]["end"] = True
-                self.save_state()
+        name = event["name"]
+        event_key = f"{name}_{event['start']}_{event['end']}"
+
+        if event_key not in static_state:
+            static_state[event_key] = {"start": False, "end": False}
+            self.save_state()
+
+        start_ts = int(start_rome.timestamp())
+        end_ts = int(end_rome.timestamp())
+
+        # ---------------------------------------------------
+        # ANNUNCIO INIZIO
+        # ---------------------------------------------------
+        announce_start_dt = (start_rome - timedelta(days=1)).replace(hour=18, minute=0, second=0)
+        if now_rome >= announce_start_dt and not static_state[event_key]["start"]:
+            recovered = now_rome > start_rome
+            embed = build_static_start_embed(event, start_ts, start_rome, recovered=recovered)
+            await channel.send(embed=embed)
+            static_state[event_key]["start"] = True
+            self.save_state()
+
+        # ---------------------------------------------------
+        # ANNUNCIO FINE
+        # ---------------------------------------------------
+        announce_end_dt = (end_rome - timedelta(days=1)).replace(hour=18, minute=0, second=0)
+        if now_rome >= announce_end_dt and not static_state[event_key]["end"]:
+            recovered = now_rome > end_rome
+            embed = build_static_end_embed(event, end_ts, end_rome, recovered=recovered)
+            await channel.send(embed=embed)
+            static_state[event_key]["end"] = True
+            self.save_state()
 
     # ---------------------------
     # SETUP
